@@ -138,6 +138,11 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Prevent horizontal page growth from transforms */
+  html,
+  body {
+    overflow-x: hidden;
+  }
 }
 
 @keyframes float-slow {

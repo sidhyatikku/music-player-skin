@@ -2,13 +2,15 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { IPodClassic } from "./ipod-classic"
 import { IPodNano6 } from "./ipod-nano-6"
 import { Nokia3310 } from "./nokia-3310"
 import { SonyWalkmanNWA1000 } from "./sony-walkman-nw-a1000"
 import { MusicPlaybackProvider } from "@/contexts/music-playback-context"
+
+const BASE_WIDTH = 500 // reference width that ALL devices render within
 
 type DeviceType = "ipod-classic" | "ipod-nano-6" | "nokia-3310" | "sony-walkman"
 
@@ -33,6 +35,27 @@ export function DeviceCarousel() {
   const [currentDeviceIndex, setCurrentDeviceIndex] = useState(2) // Start with iPod Classic (now at index 2)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [scrollPosition, setScrollPosition] = useState(2)
+  const [isMobile, setIsMobile] = useState(false)
+  const [isTablet, setIsTablet] = useState(false)
+  const [vw, setVw] = useState<number>(typeof window === "undefined" ? 1024 : window.innerWidth)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const width = window.innerWidth
+      setIsMobile(width < 768)
+      setIsTablet(width >= 768 && width < 1024)
+    }
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
+  useEffect(() => {
+    const onResize = () => setVw(window.innerWidth)
+    onResize()
+    window.addEventListener("resize", onResize)
+    return () => window.removeEventListener("resize", onResize)
+  }, [])
 
   const handlePrevious = () => {
     if (isTransitioning) return
@@ -58,9 +81,11 @@ export function DeviceCarousel() {
     }, 700)
   }
 
-  // Render devices in a wider range (-3 to +3) to allow smooth exit/entry
   const renderRange = 3
   const renderedDevices = []
+  const fitScale = Math.min((vw * 0.9) / BASE_WIDTH, 1) // never upscale past 1
+
+  const spacing = BASE_WIDTH * fitScale * (isMobile ? 0.85 : isTablet ? 0.9 : 0.95)
 
   for (let offsetPos = -renderRange; offsetPos <= renderRange; offsetPos++) {
     const virtualIndex = scrollPosition + offsetPos
@@ -68,47 +93,64 @@ export function DeviceCarousel() {
     const device = devices[deviceIndex]
     const DeviceComponent = device.component
     const isActive = offsetPos === 0
-    const isVisible = Math.abs(offsetPos) <= 2
+
+    const activeScale = isTablet ? 0.7 : 1
+    const inactiveScale = isTablet ? 0.56 : 0.8
+    const finalScale = fitScale * (isActive ? activeScale : inactiveScale)
+
+    const centerOffset = BASE_WIDTH / 2 // 250px - half of the fixed container width
 
     renderedDevices.push(
       <div
         key={`${device.id}-${virtualIndex}`}
-        className="absolute transition-all duration-700 ease-in-out"
+        className={`absolute left-1/2 top-1/2 transition-all duration-700 ease-in-out ${
+          isActive ? "opacity-100" : "opacity-0 md:opacity-50"
+        }`}
         style={{
-          opacity: isActive ? 1 : isVisible ? 0.5 : 0,
-          transform: `translateX(${offsetPos * 500}px) scale(${isActive ? 1 : 0.8})`,
+          transform: `translateX(-${centerOffset}px) translateX(${offsetPos * spacing}px) translateY(-50%)`,
+          transformOrigin: "center center",
           zIndex: isActive ? 10 : 1,
           pointerEvents: isActive ? "auto" : "none",
+          width: `${BASE_WIDTH}px`,
+          height: "auto",
         }}
       >
-        <DeviceComponent isActive={isActive} deviceName={device.name} />
+        <div
+          className="flex items-center justify-center w-full h-full transition-transform duration-700"
+          style={{
+            transform: `scale(${finalScale})`,
+            transformOrigin: "center center",
+          }}
+        >
+          <DeviceComponent isActive={isActive} deviceName={device.name} />
+        </div>
       </div>,
     )
   }
 
   return (
     <MusicPlaybackProvider>
-      <div className="relative w-full h-screen flex items-center justify-center overflow-hidden">
+      <div className="relative w-full h-screen flex items-center justify-center overflow-hidden px-4 md:px-0">
         {/* Device Display Area */}
-        <div className="relative flex items-center justify-center">{renderedDevices}</div>
+        <div className="relative flex items-center justify-center w-full">{renderedDevices}</div>
 
-        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-4 z-20">
+        <div className="absolute bottom-8 md:bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 z-20">
           <button
             onClick={handlePrevious}
             disabled={isTransitioning}
-            className="w-16 h-16 flex items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all duration-300 border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all duration-300 border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Previous device"
           >
-            <ChevronLeft className="w-8 h-8 text-white" />
+            <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-white" />
           </button>
 
           <button
             onClick={handleNext}
             disabled={isTransitioning}
-            className="w-16 h-16 flex items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all duration-300 border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-12 h-12 md:w-16 md:h-16 hidden md:flex items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all duration-300 border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Next device"
           >
-            <ChevronRight className="w-8 h-8 text-white" />
+            <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-white" />
           </button>
         </div>
       </div>
