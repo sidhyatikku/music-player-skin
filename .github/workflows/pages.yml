@@ -1,4 +1,3 @@
-# .github/workflows/pages.yml
 name: Deploy Next.js (static) to GitHub Pages
 
 on:
@@ -27,17 +26,12 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-          # Not mandatory, but explicit if you ever move it:
-          cache-dependency-path: pnpm-lock.yaml
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-          run_install: false
-
-      - name: Enable Corepack
-        run: corepack enable
+      - name: Enable pnpm via Corepack
+        run: |
+          corepack enable
+          corepack prepare pnpm@9 --activate
+          pnpm -v   # sanity check
 
       - name: Install deps
         run: pnpm install --frozen-lockfile
