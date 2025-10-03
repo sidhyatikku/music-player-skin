@@ -20,9 +20,17 @@ export function IPodNano6({
   isActive = true,
   deviceName = "iPod Nano 6th Gen",
 }: { isActive?: boolean; deviceName?: string }) {
-  const { navigation, setNavigation, selectedIndex, setSelectedIndex, isPlaying, setIsPlaying, playerRef } =
-    useMusicPlayback()
-  const [volume, setVolume] = useState(70)
+  const {
+    navigation,
+    setNavigation,
+    selectedIndex,
+    setSelectedIndex,
+    isPlaying,
+    setIsPlaying,
+    playerRef,
+    volume,
+    setVolume,
+  } = useMusicPlayback()
   const [showVolumeUI, setShowVolumeUI] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)

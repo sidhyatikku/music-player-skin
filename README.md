@@ -1,17 +1,30 @@
-# iPod Classic Interface 🔥
+# IPod Classic Interface
 
 *Automatically synced with your [v0.app](https://v0.app) deployments*
 
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/sidhyu-8335s-projects/v0-ip-od-classic-interface)
+[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/b8Th7TxtH4l)
+
 ## Overview
 
-Back in the day, I used to download Windows Media Player skins and play my music through them, my music playing experience was customized and enhanced by them. Recently, I had the epiphany of somehow enhacing my experience via Spotify/YouTube and instead of skins, I'm using old school devices which I had.
-
-🎵🍎
+This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
+Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
 
 ## Deployment
 
-Project is live at:
+Your project is live at:
 
 **[https://vercel.com/sidhyu-8335s-projects/v0-ip-od-classic-interface](https://vercel.com/sidhyu-8335s-projects/v0-ip-od-classic-interface)**
 
-Made with <3 in NYC using v0 by Vercel
+## Build your app
+
+Continue building your app on:
+
+**[https://v0.app/chat/projects/b8Th7TxtH4l](https://v0.app/chat/projects/b8Th7TxtH4l)**
+
+## How It Works
+
+1. Create and modify your project using [v0.app](https://v0.app)
+2. Deploy your chats from the v0 interface
+3. Changes are automatically pushed to this repository
+4. Vercel deploys the latest version from this repository
