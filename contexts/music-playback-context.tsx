@@ -49,8 +49,6 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
     tag.src = "https://www.youtube.com/iframe_api"
     const firstScriptTag = document.getElementsByTagName("script")[0]
     firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag)
-
-    // Create player when API is ready
     ;(window as any).onYouTubeIframeAPIReady = () => {
       playerRef.current = new (window as any).YT.Player("youtube-player", {
         height: "0",
@@ -58,6 +56,8 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
         playerVars: {
           autoplay: 0,
           controls: 0,
+          playsinline: 1, // Enable inline playback on iOS
+          enablejsapi: 1,
         },
         events: {
           onReady: () => {
@@ -79,6 +79,10 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
               setIsPlaying(false)
             }
           },
+          onError: (event: any) => {
+            console.log("[v0] Player error:", event.data)
+            isLoadingRef.current = false
+          },
         },
       })
     }
@@ -96,9 +100,21 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
         previousSongRef.current = navigation.selectedSong
         isLoadingRef.current = true
 
-        playerRef.current.loadVideoById(navigation.selectedSong.id)
-        isPlayingRef.current = true
-        setIsPlaying(true)
+        // Use cueVideoById + playVideo for better mobile compatibility
+        try {
+          playerRef.current.cueVideoById(navigation.selectedSong.id)
+          // Small delay to ensure video is cued before playing
+          setTimeout(() => {
+            if (playerRef.current && playerRef.current.playVideo) {
+              playerRef.current.playVideo()
+              isPlayingRef.current = true
+              setIsPlaying(true)
+            }
+          }, 100)
+        } catch (error) {
+          console.log("[v0] Error loading video:", error)
+          isLoadingRef.current = false
+        }
       }
     }
   }, [navigation.selectedSong, playerReady])
@@ -110,10 +126,18 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
       // Only send command if the desired state differs from actual player state
       if (isPlaying && !isPlayingRef.current) {
         console.log("[v0] Calling playVideo()")
-        playerRef.current.playVideo()
+        try {
+          playerRef.current.playVideo()
+        } catch (error) {
+          console.log("[v0] Error playing video:", error)
+        }
       } else if (!isPlaying && isPlayingRef.current) {
         console.log("[v0] Calling pauseVideo()")
-        playerRef.current.pauseVideo()
+        try {
+          playerRef.current.pauseVideo()
+        } catch (error) {
+          console.log("[v0] Error pausing video:", error)
+        }
       }
     }
   }, [isPlaying, playerReady])

@@ -51,6 +51,9 @@ export function ClickWheel({
   }
 
   const handleWheelStart = (e: React.MouseEvent | React.TouchEvent) => {
+    if ("touches" in e.nativeEvent) {
+      e.preventDefault()
+    }
     const nativeEvent = e.nativeEvent as MouseEvent | TouchEvent
     setIsRotating(true)
     setLastAngle(getAngle(nativeEvent))
@@ -59,6 +62,10 @@ export function ClickWheel({
 
   const handleWheelMove = (e: MouseEvent | TouchEvent) => {
     if (!isRotating) return
+
+    if ("touches" in e) {
+      e.preventDefault()
+    }
 
     const currentAngle = getAngle(e)
     const diff = currentAngle - lastAngle
@@ -104,13 +111,16 @@ export function ClickWheel({
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => handleWheelMove(e)
-    const handleTouchMove = (e: TouchEvent) => handleWheelMove(e)
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault()
+      handleWheelMove(e)
+    }
     const handleMouseUp = () => handleWheelEnd()
     const handleTouchEnd = () => handleWheelEnd()
 
     if (isRotating) {
       window.addEventListener("mousemove", handleMouseMove)
-      window.addEventListener("touchmove", handleTouchMove)
+      window.addEventListener("touchmove", handleTouchMove, { passive: false })
       window.addEventListener("mouseup", handleMouseUp)
       window.addEventListener("touchend", handleTouchEnd)
     }
@@ -131,7 +141,7 @@ export function ClickWheel({
       {/* Outer Ring - Touch sensitive area with raised bevel effect */}
       <div
         ref={wheelRef}
-        className="absolute inset-0 rounded-full bg-gradient-to-br from-[#3a3a42] via-[#2a2a32] to-[#1a1a22] shadow-[0_8px_24px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.05)_inset,0_-2px_4px_rgba(255,255,255,0.1)_inset] cursor-pointer select-none"
+        className="absolute inset-0 rounded-full bg-gradient-to-br from-[#3a3a42] via-[#2a2a32] to-[#1a1a22] shadow-[0_8px_24px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.05)_inset,0_-2px_4px_rgba(255,255,255,0.1)_inset] cursor-pointer select-none touch-none"
         onMouseDown={handleWheelStart}
         onTouchStart={handleWheelStart}
       >
