@@ -44,8 +44,6 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   const previousSongRef = useRef<Song | null>(null)
   const isPlayingRef = useRef(false)
   const isLoadingRef = useRef(false)
-  const hasUserInteractedRef = useRef(false)
-  const pendingPlayRef = useRef(false)
 
   const playNextSong = () => {
     if (!navigation.selectedSong || !navigation.selectedAlbum || !navigation.selectedArtist) {
@@ -64,7 +62,6 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
     // Try to play next song in current album
     if (songIndex < currentAlbum.songs.length - 1) {
       const nextSong = currentAlbum.songs[songIndex + 1]
-      console.log("[v0] Autoplay: Next song in album:", nextSong.title)
       setNavigation({
         ...navigation,
         selectedSong: nextSong,
@@ -77,7 +74,6 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
     if (albumIndex < currentArtist.albums.length - 1) {
       const nextAlbum = currentArtist.albums[albumIndex + 1]
       const nextSong = nextAlbum.songs[0]
-      console.log("[v0] Autoplay: Next album:", nextAlbum.name, "- First song:", nextSong.title)
       setNavigation({
         ...navigation,
         selectedAlbum: nextAlbum,
@@ -92,7 +88,6 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
       const nextArtist = musicLibrary[artistIndex + 1]
       const nextAlbum = nextArtist.albums[0]
       const nextSong = nextAlbum.songs[0]
-      console.log("[v0] Autoplay: Next artist:", nextArtist.name, "- Album:", nextAlbum.name, "- Song:", nextSong.title)
       setNavigation({
         level: "nowPlaying",
         selectedArtist: nextArtist,
@@ -107,14 +102,6 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
     const firstArtist = musicLibrary[0]
     const firstAlbum = firstArtist.albums[0]
     const firstSong = firstAlbum.songs[0]
-    console.log(
-      "[v0] Autoplay: Looping back to first artist:",
-      firstArtist.name,
-      "- Album:",
-      firstAlbum.name,
-      "- Song:",
-      firstSong.title,
-    )
     setNavigation({
       level: "nowPlaying",
       selectedArtist: firstArtist,
@@ -138,26 +125,21 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
           controls: 0,
           playsinline: 1,
           enablejsapi: 1,
-          origin: window.location.origin,
         },
         events: {
           onReady: () => {
             setPlayerReady(true)
-            console.log("[v0] YouTube player ready")
           },
           onStateChange: (event: any) => {
-            console.log("[v0] Player state changed:", event.data)
             if (event.data === (window as any).YT.PlayerState.PLAYING) {
               isLoadingRef.current = false
               isPlayingRef.current = true
               setIsPlaying(true)
-              hasUserInteractedRef.current = true
             } else if (event.data === (window as any).YT.PlayerState.PAUSED) {
               isLoadingRef.current = false
               isPlayingRef.current = false
               setIsPlaying(false)
             } else if (event.data === (window as any).YT.PlayerState.ENDED) {
-              console.log("[v0] Song ended, playing next...")
               isLoadingRef.current = false
               isPlayingRef.current = false
               setIsPlaying(false)
@@ -165,7 +147,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
             }
           },
           onError: (event: any) => {
-            console.log("[v0] Player error:", event.data)
+            console.error("YouTube player error:", event.data)
             isLoadingRef.current = false
           },
         },
@@ -177,31 +159,26 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
     if (playerReady && playerRef.current && navigation.selectedSong) {
       const songChanged = previousSongRef.current?.id !== navigation.selectedSong.id
 
-      console.log("[v0] Song effect triggered. Changed:", songChanged, "Loading:", isLoadingRef.current)
-
       if (songChanged && !isLoadingRef.current) {
-        console.log("[v0] Loading song:", navigation.selectedSong.title, navigation.selectedSong.id)
-
         previousSongRef.current = navigation.selectedSong
         isLoadingRef.current = true
 
         try {
-          playerRef.current.cueVideoById({
-            videoId: navigation.selectedSong.id,
-            startSeconds: 0,
-          })
-
           if (isPlaying) {
-            // Small delay to ensure video is cued
-            setTimeout(() => {
-              if (playerRef.current && playerRef.current.playVideo) {
-                console.log("[v0] Calling playVideo() after cue")
-                playerRef.current.playVideo()
-              }
-            }, 100)
+            // Load and play immediately
+            playerRef.current.loadVideoById({
+              videoId: navigation.selectedSong.id,
+              startSeconds: 0,
+            })
+          } else {
+            // Just cue the video without playing
+            playerRef.current.cueVideoById({
+              videoId: navigation.selectedSong.id,
+              startSeconds: 0,
+            })
           }
         } catch (error) {
-          console.log("[v0] Error loading video:", error)
+          console.error("Error loading video:", error)
           isLoadingRef.current = false
         }
       }
@@ -209,45 +186,25 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   }, [navigation.selectedSong, playerReady, isPlaying])
 
   useEffect(() => {
-    if (playerReady && playerRef.current) {
-      console.log("[v0] isPlaying state changed to:", isPlaying, "actual player state:", isPlayingRef.current)
-
-      // Only send command if the desired state differs from actual player state
-      if (isPlaying && !isPlayingRef.current) {
-        console.log("[v0] Calling playVideo()")
-        try {
-          const attemptPlay = () => {
-            if (playerRef.current && playerRef.current.playVideo) {
-              playerRef.current.playVideo()
-
-              setTimeout(() => {
-                if (playerRef.current && playerRef.current.getPlayerState) {
-                  const state = playerRef.current.getPlayerState()
-                  console.log("[v0] Player state after play attempt:", state)
-
-                  // If not playing or buffering, try again
-                  if (state !== 1 && state !== 3 && !hasUserInteractedRef.current) {
-                    console.log("[v0] Play failed, may need user interaction on mobile")
-                  }
-                }
-              }, 500)
-            }
+    if (playerReady && playerRef.current && navigation.selectedSong) {
+      // Only control playback if we're not loading a new song
+      if (!isLoadingRef.current) {
+        if (isPlaying && !isPlayingRef.current) {
+          try {
+            playerRef.current.playVideo()
+          } catch (error) {
+            console.error("Error playing video:", error)
           }
-
-          attemptPlay()
-        } catch (error) {
-          console.log("[v0] Error playing video:", error)
-        }
-      } else if (!isPlaying && isPlayingRef.current) {
-        console.log("[v0] Calling pauseVideo()")
-        try {
-          playerRef.current.pauseVideo()
-        } catch (error) {
-          console.log("[v0] Error pausing video:", error)
+        } else if (!isPlaying && isPlayingRef.current) {
+          try {
+            playerRef.current.pauseVideo()
+          } catch (error) {
+            console.error("Error pausing video:", error)
+          }
         }
       }
     }
-  }, [isPlaying, playerReady])
+  }, [isPlaying, playerReady, navigation.selectedSong])
 
   useEffect(() => {
     if (playerReady && playerRef.current) {
