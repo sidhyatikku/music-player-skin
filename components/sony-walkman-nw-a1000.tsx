@@ -252,7 +252,7 @@ export function SonyWalkmanNWA1000({
   return (
     <div className="relative flex flex-col items-center">
       <div
-        className="relative w-64 h-[500px] rounded-3xl border-4 border-pink-300/50"
+        className="relative w-64 h-[500px] rounded-[3rem] border-4 border-pink-300/50"
         style={{
           background: "linear-gradient(135deg, #f472b6 0%, #ec4899 30%, #db2777 60%, #be185d 100%)",
           boxShadow: `
@@ -263,7 +263,7 @@ export function SonyWalkmanNWA1000({
         }}
       >
         <div
-          className="absolute top-0 left-0 right-0 h-32 rounded-t-3xl opacity-30 pointer-events-none"
+          className="absolute top-0 left-0 right-0 h-32 rounded-t-[3rem] opacity-30 pointer-events-none"
           style={{
             background: "linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, transparent 100%)",
           }}

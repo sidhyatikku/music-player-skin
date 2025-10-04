@@ -88,6 +88,13 @@ export function IPodDisplay({ navigation, selectedIndex, isPlaying, volume, hide
   }
 
   if (navigation.level === "albums" && navigation.selectedArtist) {
+    console.log("[v0] Rendering albums view for artist:", navigation.selectedArtist.name)
+    console.log("[v0] Albums count:", navigation.selectedArtist.albums.length)
+    console.log(
+      "[v0] Albums:",
+      navigation.selectedArtist.albums.map((a) => ({ name: a.name, year: a.year })),
+    )
+
     return (
       <div className="w-full h-full bg-gradient-to-b from-[#fafafa] to-[#f0f0f2] p-3 overflow-hidden">
         <div className="border-b border-gray-300 pb-1 mb-2 shadow-[0_1px_0_rgba(255,255,255,0.8)]">

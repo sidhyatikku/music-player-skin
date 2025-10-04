@@ -100,17 +100,14 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
         previousSongRef.current = navigation.selectedSong
         isLoadingRef.current = true
 
-        // Use cueVideoById + playVideo for better mobile compatibility
+        // loadVideoById loads and plays the video in one call, avoiding race conditions
         try {
-          playerRef.current.cueVideoById(navigation.selectedSong.id)
-          // Small delay to ensure video is cued before playing
-          setTimeout(() => {
-            if (playerRef.current && playerRef.current.playVideo) {
-              playerRef.current.playVideo()
-              isPlayingRef.current = true
-              setIsPlaying(true)
-            }
-          }, 100)
+          playerRef.current.loadVideoById({
+            videoId: navigation.selectedSong.id,
+            startSeconds: 0,
+          })
+          // Update refs to reflect that we're now playing
+          isPlayingRef.current = true
         } catch (error) {
           console.log("[v0] Error loading video:", error)
           isLoadingRef.current = false

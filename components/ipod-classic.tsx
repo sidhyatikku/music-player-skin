@@ -31,20 +31,40 @@ export function IPodClassic({
   }
 
   const getCurrentList = () => {
+    console.log("[v0] getCurrentList called. Level:", navigation.level)
+    console.log("[v0] Selected Artist:", navigation.selectedArtist?.name)
+    console.log("[v0] Selected Album:", navigation.selectedAlbum?.name)
+
     switch (navigation.level) {
       case "artists":
+        console.log("[v0] Returning artists list, count:", musicLibrary.length)
         return musicLibrary
       case "albums":
-        return navigation.selectedArtist?.albums || []
+        const albums = navigation.selectedArtist?.albums || []
+        console.log("[v0] Returning albums list, count:", albums.length)
+        console.log(
+          "[v0] Albums:",
+          albums.map((a) => a.name),
+        )
+        return albums
       case "songs":
-        return navigation.selectedAlbum?.songs || []
+        const songs = navigation.selectedAlbum?.songs || []
+        console.log("[v0] Returning songs list, count:", songs.length)
+        console.log(
+          "[v0] Songs:",
+          songs.map((s) => s.title),
+        )
+        return songs
       default:
+        console.log("[v0] Returning empty list")
         return []
     }
   }
 
   const handleSelect = () => {
     showUI()
+
+    console.log("[v0] handleSelect called. Current level:", navigation.level, "Selected index:", selectedIndex)
 
     if (navigation.level === "nowPlaying") {
       setIsPlaying((prev) => !prev)
@@ -55,6 +75,7 @@ export function IPodClassic({
 
     if (navigation.level === "artists") {
       const artist = currentList[selectedIndex] as Artist
+      console.log("[v0] Selecting artist:", artist.name)
       setNavigation({
         level: "albums",
         selectedArtist: artist,
@@ -64,6 +85,7 @@ export function IPodClassic({
       setSelectedIndex(0)
     } else if (navigation.level === "albums") {
       const album = currentList[selectedIndex] as Album
+      console.log("[v0] Selecting album:", album.name)
       setNavigation({
         ...navigation,
         level: "songs",
@@ -73,6 +95,7 @@ export function IPodClassic({
       setSelectedIndex(0)
     } else if (navigation.level === "songs") {
       const song = currentList[selectedIndex] as Song
+      console.log("[v0] Selecting song:", song.title)
       setNavigation({
         ...navigation,
         level: "nowPlaying",
@@ -85,21 +108,39 @@ export function IPodClassic({
   const handleMenu = () => {
     showUI()
 
+    console.log("[v0] handleMenu called. Current level:", navigation.level)
+    console.log("[v0] Current navigation state:", {
+      level: navigation.level,
+      artist: navigation.selectedArtist?.name,
+      album: navigation.selectedAlbum?.name,
+      song: navigation.selectedSong?.title,
+    })
+
     if (navigation.level === "nowPlaying") {
       setNavigation({
-        ...navigation,
         level: "songs",
+        selectedArtist: navigation.selectedArtist,
+        selectedAlbum: navigation.selectedAlbum,
+        selectedSong: navigation.selectedSong, // Keep song to highlight it in the list
       })
       const songs = navigation.selectedAlbum?.songs || []
       const currentSongIndex = songs.findIndex((s) => s.id === navigation.selectedSong?.id)
-      setSelectedIndex(currentSongIndex >= 0 ? currentSongIndex : 0)
+      const newIndex = currentSongIndex >= 0 ? currentSongIndex : 0
+      console.log("[v0] Going back to songs. Setting index to:", newIndex)
+      setSelectedIndex(newIndex)
     } else if (navigation.level === "songs") {
+      const currentAlbum = navigation.selectedAlbum
       setNavigation({
-        ...navigation,
         level: "albums",
+        selectedArtist: navigation.selectedArtist,
         selectedAlbum: null,
+        selectedSong: null,
       })
-      setSelectedIndex(0)
+      const albums = navigation.selectedArtist?.albums || []
+      const currentAlbumIndex = albums.findIndex((a) => a.name === currentAlbum?.name)
+      const newIndex = currentAlbumIndex >= 0 ? currentAlbumIndex : 0
+      console.log("[v0] Going back to albums. Current album:", currentAlbum?.name, "Setting index to:", newIndex)
+      setSelectedIndex(newIndex)
     } else if (navigation.level === "albums") {
       setNavigation({
         level: "artists",
@@ -107,7 +148,10 @@ export function IPodClassic({
         selectedAlbum: null,
         selectedSong: null,
       })
-      setSelectedIndex(0)
+      const artistIndex = musicLibrary.findIndex((a) => a.name === navigation.selectedArtist?.name)
+      const newIndex = artistIndex >= 0 ? artistIndex : 0
+      console.log("[v0] Going back to artists. Setting index to:", newIndex)
+      setSelectedIndex(newIndex)
     }
   }
 
