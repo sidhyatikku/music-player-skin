@@ -88,13 +88,6 @@ export function IPodDisplay({ navigation, selectedIndex, isPlaying, volume, hide
   }
 
   if (navigation.level === "albums" && navigation.selectedArtist) {
-    console.log("[v0] Rendering albums view for artist:", navigation.selectedArtist.name)
-    console.log("[v0] Albums count:", navigation.selectedArtist.albums.length)
-    console.log(
-      "[v0] Albums:",
-      navigation.selectedArtist.albums.map((a) => ({ name: a.name, year: a.year })),
-    )
-
     return (
       <div className="w-full h-full bg-gradient-to-b from-[#fafafa] to-[#f0f0f2] p-3 overflow-hidden">
         <div className="border-b border-gray-300 pb-1 mb-2 shadow-[0_1px_0_rgba(255,255,255,0.8)]">
@@ -103,7 +96,7 @@ export function IPodDisplay({ navigation, selectedIndex, isPlaying, volume, hide
         <div className="space-y-0.5 overflow-y-auto h-[200px] scrollbar-hide pointer-events-none">
           {navigation.selectedArtist.albums.map((album, index) => (
             <div
-              key={album.name}
+              key={`${navigation.selectedArtist.name}-${album.name}-${index}`}
               ref={index === selectedIndex ? selectedItemRef : null}
               className={`text-[11px] px-2 py-1.5 flex items-center gap-2 rounded ${
                 index === selectedIndex
@@ -145,7 +138,7 @@ export function IPodDisplay({ navigation, selectedIndex, isPlaying, volume, hide
 
             return (
               <div
-                key={song.id}
+                key={`${navigation.selectedAlbum.name}-${song.id}-${index}`}
                 ref={index === selectedIndex ? selectedItemRef : null}
                 className={`text-[11px] px-2 py-1.5 rounded flex items-center gap-2 ${
                   isCursorSelected

@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { IPodDisplay } from "./ipod-display"
 import { ClickWheel } from "./click-wheel"
 import { musicLibrary, type Artist, type Album, type Song } from "@/lib/music-library"
@@ -30,7 +30,7 @@ export function IPodClassic({
     setHideUI(false)
   }
 
-  const getCurrentList = () => {
+  const getCurrentList = useCallback(() => {
     console.log("[v0] getCurrentList called. Level:", navigation.level)
     console.log("[v0] Selected Artist:", navigation.selectedArtist?.name)
     console.log("[v0] Selected Album:", navigation.selectedAlbum?.name)
@@ -59,7 +59,7 @@ export function IPodClassic({
         console.log("[v0] Returning empty list")
         return []
     }
-  }
+  }, [navigation.level, navigation.selectedArtist, navigation.selectedAlbum])
 
   const handleSelect = () => {
     showUI()
@@ -240,6 +240,7 @@ export function IPodClassic({
                   {/* Screen glass reflection */}
                   <div className="absolute top-0 left-0 right-0 h-[60px] md:h-[46px] lg:h-[60px] bg-gradient-to-b from-white/30 to-transparent pointer-events-none z-10"></div>
                   <IPodDisplay
+                    key={navigation.level}
                     navigation={navigation}
                     selectedIndex={selectedIndex}
                     isPlaying={isPlaying}
