@@ -96,15 +96,9 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
         previousSongRef.current = navigation.selectedSong
         isLoadingRef.current = true
 
-        // If we're in now playing mode, autoplay the new song
-        if (navigation.level === "nowPlaying") {
-          playerRef.current.loadVideoById(navigation.selectedSong.id)
-          isPlayingRef.current = true
-        } else {
-          // Just load without playing if not in now playing mode
-          playerRef.current.cueVideoById(navigation.selectedSong.id)
-          isPlayingRef.current = false
-        }
+        playerRef.current.loadVideoById(navigation.selectedSong.id)
+        isPlayingRef.current = true
+        setIsPlaying(true)
       }
     }
   }, [navigation.selectedSong, playerReady])

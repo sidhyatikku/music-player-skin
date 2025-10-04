@@ -68,13 +68,14 @@ export function ClickWheel({
     if (diff > Math.PI) normalizedDiff = diff - 2 * Math.PI
     if (diff < -Math.PI) normalizedDiff = diff + 2 * Math.PI
 
-    if (showPlaylist) {
-      // Accumulate rotation for playlist scrolling
-      const newDelta = rotationDelta + normalizedDiff
-      setRotationDelta(newDelta)
+    const newDelta = rotationDelta + normalizedDiff
+    setRotationDelta(newDelta)
 
+    // Scroll/volume threshold
+    const threshold = 0.3
+
+    if (showPlaylist) {
       // Scroll when rotation exceeds threshold
-      const threshold = 0.3
       if (newDelta > threshold) {
         onScrollDown()
         setRotationDelta(0)
@@ -83,9 +84,14 @@ export function ClickWheel({
         setRotationDelta(0)
       }
     } else {
-      // Volume control when not in playlist
-      const volumeChange = normalizedDiff * 15
-      onVolumeChange(volume + volumeChange)
+      // Volume control in increments of 10
+      if (newDelta > threshold) {
+        onVolumeChange(Math.min(100, volume + 10))
+        setRotationDelta(0)
+      } else if (newDelta < -threshold) {
+        onVolumeChange(Math.max(0, volume - 10))
+        setRotationDelta(0)
+      }
     }
 
     setLastAngle(currentAngle)

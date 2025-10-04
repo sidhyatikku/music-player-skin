@@ -109,7 +109,6 @@ export function IPodNano6({
         ...navigation,
         level: "songs",
       })
-      setIsPlaying(false)
     } else if (navigation.level === "songs") {
       setNavigation({
         ...navigation,

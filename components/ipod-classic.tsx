@@ -90,7 +90,9 @@ export function IPodClassic({
         ...navigation,
         level: "songs",
       })
-      setIsPlaying(false)
+      const songs = navigation.selectedAlbum?.songs || []
+      const currentSongIndex = songs.findIndex((s) => s.id === navigation.selectedSong?.id)
+      setSelectedIndex(currentSongIndex >= 0 ? currentSongIndex : 0)
     } else if (navigation.level === "songs") {
       setNavigation({
         ...navigation,
@@ -168,7 +170,6 @@ export function IPodClassic({
 
   const handleVolumeChange = (newVolume: number) => {
     showUI()
-
     setVolume(Math.max(0, Math.min(100, newVolume)))
   }
 
@@ -185,11 +186,11 @@ export function IPodClassic({
         <div className="absolute top-0 left-0 right-0 h-[200px] md:h-[154px] lg:h-[200px] bg-gradient-to-b from-white/10 to-transparent rounded-t-[40px] md:rounded-t-[31px] lg:rounded-t-[40px] pointer-events-none"></div>
 
         {/* Inner bezel with depth */}
-        <div className="absolute inset-[4px] md:inset-[3px] lg:inset-[4px] rounded-[36px] md:rounded-[28px] lg:rounded-[36px] bg-gradient-to-b from-[#3a3a42] via-[#4a4a52] to-[#3a3a42] shadow-[0_0_20px_rgba(0,0,0,0.5)_inset,0_1px_0_rgba(255,255,255,0.05)]">
+        <div className="absolute inset-[4px] md:inset-[3px] lg:inset-[4px] rounded-[36px] md:rounded-[28px] lg:rounded-[36px] bg-gradient-to-b from-[#3a3a42] via-[#4a4a52] to-[#3a3a42] shadow-[0_4px_12px_rgba(0,0,0,0.6),0_0_0_1px_rgba(0,0,0,0.8)]">
           {/* Screen Area with inset bezel effect */}
           <div className="absolute top-8 md:top-[25px] lg:top-8 left-1/2 -translate-x-1/2 w-[320px] md:w-[246px] lg:w-[320px] h-[240px] md:h-[185px] lg:h-[240px]">
             {/* Screen bezel - outer frame */}
-            <div className="absolute inset-0 bg-gradient-to-b from-[#2a2a32] via-[#1a1a22] to-[#2a2a32] rounded-2xl md:rounded-xl lg:rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.6),0_0_0_1px_rgba(0,0,0,0.8)]">
+            <div className="absolute inset-0 bg-gradient-to-b from-[#2a2a32] via-[#1a1a22] to-[#2a2a32] rounded-2xl md:rounded-xl lg:rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.1)]">
               {isActive ? (
                 <div className="absolute inset-[3px] md:inset-[2px] lg:inset-[3px] bg-gradient-to-b from-[#e0e0e5] via-[#f5f5f7] to-[#d8d8dd] rounded-[14px] md:rounded-[11px] lg:rounded-[14px] shadow-[0_2px_8px_rgba(0,0,0,0.3)_inset,0_-1px_0_rgba(255,255,255,0.5)_inset] overflow-hidden">
                   {/* Screen glass reflection */}

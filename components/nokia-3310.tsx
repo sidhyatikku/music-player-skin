@@ -104,7 +104,6 @@ export function Nokia3310({ isActive = true, deviceName = "Nokia 3310" }: { isAc
         ...navigation,
         level: "songs",
       })
-      setIsPlaying(false)
     } else if (navigation.level === "songs") {
       setNavigation({
         ...navigation,
