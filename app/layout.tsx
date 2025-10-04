@@ -24,9 +24,38 @@ const rokkitt = Rokkitt({
 })
 
 export const metadata: Metadata = {
-  title: "iPod Classic Interface",
-  description: "Interactive iPod Classic with music library",
+  title: "Played – Music Player Skin",
+  description:
+    "A music player skin for anyone who is feeling nostalgic and wants to interact with their favorite device.",
   generator: "v0.app",
+  metadataBase: new URL("https://music.sidhyatikku.com"),
+  openGraph: {
+    title: "Played – Music Player Skin",
+    description:
+      "A music player skin for anyone who is feeling nostalgic and wants to interact with their favorite device.",
+    url: "https://music.sidhyatikku.com",
+    siteName: "Played",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1920,
+        height: 1080,
+        alt: "Played - Nostalgic music player skins including iPod Classic and Sony Walkman",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Played – Music Player Skin",
+    description:
+      "A music player skin for anyone who is feeling nostalgic and wants to interact with their favorite device.",
+    images: ["/og-image.png"],
+  },
+  icons: {
+    icon: "/favicon.ico",
+  },
 }
 
 export default function RootLayout({
