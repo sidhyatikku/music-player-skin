@@ -32,7 +32,7 @@ export function ClickWheelSoundProvider({ children }: { children: ReactNode }) {
         audioContextRef.current = new AudioContextClass()
 
         // Load the click sound
-        const response = await fetch("/sounds/click.mov")
+        const response = await fetch("https://hebbkx1anhila5yf.public.blob.vercel-storage.com/sound-2-3MBFmUiLFA8hzXiIffCRSUl1Oom5sL.mov")
         const arrayBuffer = await response.arrayBuffer()
         audioBufferRef.current = await audioContextRef.current.decodeAudioData(arrayBuffer)
 
