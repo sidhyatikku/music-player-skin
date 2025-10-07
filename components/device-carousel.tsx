@@ -122,126 +122,84 @@ export function DeviceCarousel() {
     isTablet,
   )
 
-  if (isMobile) {
-    // On mobile, only render current device (and previous during transition)
-    const currentDevice = devices[currentDeviceIndex]
-    const CurrentDeviceComponent = currentDevice.component
-    const centerOffset = BASE_WIDTH / 2
-    const activeScale = 1.3
-    const finalScale = fitScale * activeScale
+  for (let offsetPos = -renderRange; offsetPos <= renderRange; offsetPos++) {
+    const virtualIndex = scrollPosition + offsetPos
+    const deviceIndex = ((virtualIndex % devices.length) + devices.length) % devices.length
+    const device = devices[deviceIndex]
+    const DeviceComponent = device.component
+    const isActive = offsetPos === 0
+
+    const activeScale = isMobile ? 1.3 : isTablet ? 0.85 : 1 // Increased mobile scale from 0.7 to 0.875 (25% increase)
+    const inactiveScale = isMobile ? 0.75 : isTablet ? 0.75 : 0.8 // Increased mobile scale from 0.56 to 0.7 (25% increase)
+    const finalScale = fitScale * (isActive ? activeScale : inactiveScale)
+
+    const centerOffset = BASE_WIDTH / 2 // 250px - half of the fixed container width
 
     console.log(
-      `[v0] Device ${currentDevice.name} (ACTIVE) - width: ${BASE_WIDTH}px, finalScale: ${finalScale}, rendered width: ${BASE_WIDTH * finalScale}px, height: auto (aspect-ratio based)`,
+      `[v0] Device ${device.name} (${isActive ? "ACTIVE" : "inactive"}) - width: ${BASE_WIDTH}px, finalScale: ${finalScale}, rendered width: ${BASE_WIDTH * finalScale}px, height: auto (aspect-ratio based)`,
     )
 
-    // Render current device (scaling up and fading in)
     renderedDevices.push(
       <div
-        key={`current-${currentDevice.id}-${currentDeviceIndex}`}
+        key={`${device.id}-${virtualIndex}`}
         className={`absolute left-1/2 top-1/2 transition-all duration-700 ease-in-out ${
-          isTransitioning ? "opacity-0 scale-75" : "opacity-100 scale-100"
+          isActive ? "opacity-100" : "opacity-0 md:opacity-50"
         }`}
         style={{
-          transform: `translateX(-${centerOffset}px) translateY(-55%)`,
+          transform: `translateX(-${centerOffset}px) translateX(${offsetPos * spacing}px) translateY(${isMobile ? "-60%" : "-50%"})`,
           transformOrigin: "center center",
-          zIndex: 10,
-          pointerEvents: "auto",
+          zIndex: isActive ? 10 : 1,
+          pointerEvents: isActive ? "auto" : "none",
           width: `${BASE_WIDTH}px`,
           height: "auto",
         }}
       >
         <div
-          className="flex items-center justify-center w-full h-full"
+          className="flex items-center justify-center w-full h-full transition-transform duration-700"
           style={{
             transform: `scale(${finalScale})`,
             transformOrigin: "center center",
           }}
         >
-          <CurrentDeviceComponent isActive={true} deviceName={currentDevice.name} />
+          <DeviceComponent isActive={isActive} deviceName={device.name} />
         </div>
       </div>,
     )
+  }
 
-    // Render previous device during transition (scaling down and fading out)
-    if (isTransitioning && previousDeviceIndex !== null) {
-      const previousDevice = devices[previousDeviceIndex]
-      const PreviousDeviceComponent = previousDevice.component
+  if (isMobile && isTransitioning && previousDeviceIndex !== null) {
+    const previousDevice = devices[previousDeviceIndex]
+    const PreviousDeviceComponent = previousDevice.component
+    const centerOffset = BASE_WIDTH / 2
 
-      console.log(`[v0] Device ${previousDevice.name} (PREVIOUS) - transitioning out`)
+    const activeScale = 1.3
+    const inactiveScale = 0.75
+    const transitionScale = fitScale * inactiveScale
 
-      renderedDevices.push(
+    renderedDevices.push(
+      <div
+        key={`previous-${previousDevice.id}`}
+        className="absolute left-1/2 top-1/2 transition-all duration-700 ease-in-out opacity-0"
+        style={{
+          transform: `translateX(-${centerOffset}px) translateY(-55%)`,
+          transformOrigin: "center center",
+          zIndex: 5,
+          pointerEvents: "none",
+          width: `${BASE_WIDTH}px`,
+          height: "auto",
+        }}
+      >
         <div
-          key={`previous-${previousDevice.id}-${previousDeviceIndex}`}
-          className="absolute left-1/2 top-1/2 transition-all duration-700 ease-in-out opacity-100 scale-100"
+          className="flex items-center justify-center w-full h-full transition-transform duration-700 ease-in-out"
           style={{
-            transform: `translateX(-${centerOffset}px) translateY(-55%)`,
+            transform: `scale(${transitionScale})`,
             transformOrigin: "center center",
-            zIndex: 5,
-            pointerEvents: "none",
-            width: `${BASE_WIDTH}px`,
-            height: "auto",
-            opacity: 0,
-            transform: `translateX(-${centerOffset}px) translateY(-55%) scale(0.75)`,
           }}
         >
-          <div
-            className="flex items-center justify-center w-full h-full"
-            style={{
-              transform: `scale(${finalScale})`,
-              transformOrigin: "center center",
-            }}
-          >
-            <PreviousDeviceComponent isActive={false} deviceName={previousDevice.name} />
-          </div>
-        </div>,
-      )
-    }
-  } else {
-    // Desktop/tablet: render carousel with multiple devices
-    for (let offsetPos = -renderRange; offsetPos <= renderRange; offsetPos++) {
-      const virtualIndex = scrollPosition + offsetPos
-      const deviceIndex = ((virtualIndex % devices.length) + devices.length) % devices.length
-      const device = devices[deviceIndex]
-      const DeviceComponent = device.component
-      const isActive = offsetPos === 0
-
-      const activeScale = isTablet ? 0.85 : 1
-      const inactiveScale = isTablet ? 0.75 : 0.8
-      const finalScale = fitScale * (isActive ? activeScale : inactiveScale)
-
-      const centerOffset = BASE_WIDTH / 2 // 250px - half of the fixed container width
-
-      console.log(
-        `[v0] Device ${device.name} (${isActive ? "ACTIVE" : "inactive"}) - width: ${BASE_WIDTH}px, finalScale: ${finalScale}, rendered width: ${BASE_WIDTH * finalScale}px, height: auto (aspect-ratio based)`,
-      )
-
-      renderedDevices.push(
-        <div
-          key={`${device.id}-${virtualIndex}`}
-          className={`absolute left-1/2 top-1/2 transition-all duration-700 ease-in-out ${
-            isActive ? "opacity-100" : "opacity-50"
-          }`}
-          style={{
-            transform: `translateX(-${centerOffset}px) translateX(${offsetPos * spacing}px) translateY(-50%)`,
-            transformOrigin: "center center",
-            zIndex: isActive ? 10 : 1,
-            pointerEvents: isActive ? "auto" : "none",
-            width: `${BASE_WIDTH}px`,
-            height: "auto",
-          }}
-        >
-          <div
-            className="flex items-center justify-center w-full h-full transition-transform duration-700"
-            style={{
-              transform: `scale(${finalScale})`,
-              transformOrigin: "center center",
-            }}
-          >
-            <DeviceComponent isActive={isActive} deviceName={device.name} />
-          </div>
-        </div>,
-      )
-    }
+          <PreviousDeviceComponent isActive={false} deviceName={previousDevice.name} />
+        </div>
+      </div>,
+    )
   }
 
   return (
@@ -250,7 +208,7 @@ export function DeviceCarousel() {
         {/* Device Display Area */}
         <div className="relative flex items-center justify-center w-full">{renderedDevices}</div>
 
-        <div className="absolute bottom-20 md:bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 z-20">
+        <div className="absolute bottom-30 md:bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 z-20">
           <button
             onClick={handlePrevious}
             disabled={isTransitioning}
