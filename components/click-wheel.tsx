@@ -36,18 +36,6 @@ export function ClickWheel({
   const [isRotating, setIsRotating] = useState(false)
   const [lastAngle, setLastAngle] = useState(0)
   const [rotationDelta, setRotationDelta] = useState(0)
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const checkMobile = () => {
-      const userAgent = navigator.userAgent.toLowerCase()
-      const isMobileDevice =
-        /iphone|ipad|ipod|android|webos|blackberry|windows phone/i.test(userAgent) ||
-        (navigator.maxTouchPoints && navigator.maxTouchPoints > 2)
-      setIsMobile(isMobileDevice)
-    }
-    checkMobile()
-  }, [])
 
   const getAngle = (e: MouseEvent | TouchEvent) => {
     if (!wheelRef.current) return 0
@@ -103,20 +91,13 @@ export function ClickWheel({
         setRotationDelta(0)
       }
     } else {
-      if (!isMobile) {
-        // Volume control in increments of 10 (desktop only)
-        if (newDelta > threshold) {
-          onVolumeChange(Math.min(100, volume + 10))
-          setRotationDelta(0)
-        } else if (newDelta < -threshold) {
-          onVolumeChange(Math.max(0, volume - 10))
-          setRotationDelta(0)
-        }
-      } else {
-        // On mobile, reset delta but don't change volume
-        if (Math.abs(newDelta) > threshold) {
-          setRotationDelta(0)
-        }
+      // Volume control in increments of 10
+      if (newDelta > threshold) {
+        onVolumeChange(Math.min(100, volume + 10))
+        setRotationDelta(0)
+      } else if (newDelta < -threshold) {
+        onVolumeChange(Math.max(0, volume - 10))
+        setRotationDelta(0)
       }
     }
 

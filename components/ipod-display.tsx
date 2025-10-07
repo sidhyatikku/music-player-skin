@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useMusicPlayback } from "@/contexts/music-playback-context"
 import { musicLibrary, type Artist, type Album, type Song } from "@/lib/music-library"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 type NavigationLevel = "artists" | "albums" | "songs" | "nowPlaying"
 
@@ -26,18 +27,7 @@ export function IPodDisplay({ navigation, selectedIndex, isPlaying, volume, hide
   const selectedItemRef = useRef<HTMLDivElement>(null)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const checkMobile = () => {
-      const userAgent = navigator.userAgent.toLowerCase()
-      const isMobileDevice =
-        /iphone|ipad|ipod|android|webos|blackberry|windows phone/i.test(userAgent) ||
-        (navigator.maxTouchPoints && navigator.maxTouchPoints > 2)
-      setIsMobile(isMobileDevice)
-    }
-    checkMobile()
-  }, [])
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -199,7 +189,6 @@ export function IPodDisplay({ navigation, selectedIndex, isPlaying, volume, hide
 
         <div className="absolute inset-0 pt-8 pb-12 px-4 flex items-end justify-start">
           <div className="w-full flex items-end gap-3 pb-2">
-            {/* Album artwork on the left - larger size */}
             <div className="flex-shrink-0">
               {navigation.selectedAlbum?.coverUrl ? (
                 <img
@@ -215,7 +204,6 @@ export function IPodDisplay({ navigation, selectedIndex, isPlaying, volume, hide
               )}
             </div>
 
-            {/* Song info on the right - aligned to bottom */}
             <div className="flex-1 min-w-0 pb-1">
               <div className="text-sm font-bold text-black truncate leading-tight">{navigation.selectedSong.title}</div>
               <div className="text-xs text-gray-700 truncate mt-0.5">{navigation.selectedArtist?.name}</div>
@@ -225,7 +213,6 @@ export function IPodDisplay({ navigation, selectedIndex, isPlaying, volume, hide
                 <div className="text-xs text-gray-600 mt-1">{navigation.selectedAlbum.year}</div>
               )}
 
-              {/* Track number */}
               <div className="text-xs font-semibold text-black mt-1">
                 {currentSongIndex + 1} of {totalSongs}
               </div>
@@ -233,7 +220,6 @@ export function IPodDisplay({ navigation, selectedIndex, isPlaying, volume, hide
           </div>
         </div>
 
-        {/* Progress bar at the bottom */}
         <div className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-white border-t border-gray-200 z-10">
           <div className="flex items-center gap-2">
             <div className="text-[10px] text-black font-medium">{formatTime(currentTime)}</div>

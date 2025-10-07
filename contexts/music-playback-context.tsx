@@ -45,7 +45,6 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   const isPlayingRef = useRef(isPlaying)
   const isLoadingRef = useRef(false)
   const navigationRef = useRef(navigation)
-  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
     navigationRef.current = navigation
@@ -184,20 +183,6 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    const checkMobile = () => {
-      const userAgent = navigator.userAgent.toLowerCase()
-      const isMobileDevice =
-        /iphone|ipad|ipod|android|webos|blackberry|windows phone/i.test(userAgent) ||
-        (navigator.maxTouchPoints && navigator.maxTouchPoints > 2)
-      setIsMobile(isMobileDevice)
-      if (isMobileDevice) {
-        console.log("[v0] Mobile device detected - volume control via device buttons only")
-      }
-    }
-    checkMobile()
-  }, [])
-
-  useEffect(() => {
     if (playerReady && playerRef.current && navigation.selectedSong) {
       const songChanged = previousSongRef.current?.id !== navigation.selectedSong.id
 
@@ -206,24 +191,57 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
         isLoadingRef.current = true
 
         try {
-          playerRef.current.loadVideoById({
-            videoId: navigation.selectedSong.id,
-            startSeconds: 0,
-          })
-          setIsPlaying(true)
+          if (isPlaying) {
+            // Load and play immediately
+            playerRef.current.loadVideoById({
+              videoId: navigation.selectedSong.id,
+              startSeconds: 0,
+            })
+          } else {
+            // Just cue the video without playing
+            playerRef.current.cueVideoById({
+              videoId: navigation.selectedSong.id,
+              startSeconds: 0,
+            })
+          }
         } catch (error) {
           console.error("Error loading video:", error)
           isLoadingRef.current = false
         }
       }
     }
-  }, [navigation.selectedSong, playerReady])
+  }, [navigation.selectedSong, playerReady, isPlaying])
 
   useEffect(() => {
-    if (playerReady && playerRef.current && !isMobile) {
+    if (playerReady && playerRef.current && navigation.selectedSong) {
+      // Only control playback if we're not loading a new song
+      if (!isLoadingRef.current) {
+        console.log("[v0] Playback control - isPlaying:", isPlaying, "isPlayingRef:", isPlayingRef.current)
+
+        if (isPlaying) {
+          try {
+            console.log("[v0] Calling playVideo()")
+            playerRef.current.playVideo()
+          } catch (error) {
+            console.error("Error playing video:", error)
+          }
+        } else {
+          try {
+            console.log("[v0] Calling pauseVideo()")
+            playerRef.current.pauseVideo()
+          } catch (error) {
+            console.error("Error pausing video:", error)
+          }
+        }
+      }
+    }
+  }, [isPlaying, playerReady, navigation.selectedSong])
+
+  useEffect(() => {
+    if (playerReady && playerRef.current) {
       playerRef.current.setVolume(volume)
     }
-  }, [volume, playerReady, isMobile])
+  }, [volume, playerReady])
 
   return (
     <MusicPlaybackContext.Provider

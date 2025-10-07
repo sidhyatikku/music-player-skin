@@ -13,7 +13,6 @@ export function IPodClassic({
     useMusicPlayback()
 
   const [hideUI, setHideUI] = useState(false)
-  // const lastNowPlayingTransitionRef = useRef<number>(0)
 
   useEffect(() => {
     if (navigation.level === "nowPlaying" && isPlaying) {
@@ -102,6 +101,7 @@ export function IPodClassic({
         level: "nowPlaying",
         selectedSong: song,
       })
+      setIsPlaying(true)
     }
   }
 
