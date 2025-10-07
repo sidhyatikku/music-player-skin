@@ -141,7 +141,7 @@ export function DeviceCarousel() {
           isActive ? "opacity-100" : "opacity-0 md:opacity-50"
         }`}
         style={{
-          transform: `translateX(-${centerOffset}px) translateX(${offsetPos * spacing}px) translateY(-50%)`,
+          transform: `translateX(-${centerOffset}px) translateX(${offsetPos * spacing}px) translateY(${isMobile ? "-55%" : "-50%"})`,
           transformOrigin: "center center",
           zIndex: isActive ? 10 : 1,
           pointerEvents: isActive ? "auto" : "none",
@@ -168,7 +168,7 @@ export function DeviceCarousel() {
         {/* Device Display Area */}
         <div className="relative flex items-center justify-center w-full">{renderedDevices}</div>
 
-        <div className="absolute bottom-4 md:bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 z-20">
+        <div className="absolute bottom-20 md:bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 z-20">
           <button
             onClick={handlePrevious}
             disabled={isTransitioning}
