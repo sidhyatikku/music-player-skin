@@ -185,9 +185,7 @@ export function IPodDisplay({ navigation, selectedIndex, isPlaying, volume, hide
             <span className="text-[10px] font-semibold text-black">Now Playing</span>
             <div className="flex items-center gap-1">
               <div className="text-[10px] text-black">{isPlaying ? "▶" : "❚❚"}</div>
-              {isMobile ? (
-                <div className="text-[9px] text-gray-600 italic">Device Vol</div>
-              ) : (
+              {!isMobile && (
                 <div className="w-12 h-1.5 bg-gray-300 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-green-500 rounded-full transition-all duration-150"

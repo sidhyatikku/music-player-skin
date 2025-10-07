@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { IPodDisplay } from "./ipod-display"
 import { ClickWheel } from "./click-wheel"
 import { musicLibrary, type Artist, type Album, type Song } from "@/lib/music-library"
@@ -13,7 +13,7 @@ export function IPodClassic({
     useMusicPlayback()
 
   const [hideUI, setHideUI] = useState(false)
-  const lastNowPlayingTransitionRef = useRef<number>(0)
+  // const lastNowPlayingTransitionRef = useRef<number>(0)
 
   useEffect(() => {
     if (navigation.level === "nowPlaying" && isPlaying) {
@@ -68,12 +68,7 @@ export function IPodClassic({
     console.log("[v0] handleSelect called. Current level:", navigation.level, "Selected index:", selectedIndex)
 
     if (navigation.level === "nowPlaying") {
-      const timeSinceTransition = Date.now() - lastNowPlayingTransitionRef.current
-      if (timeSinceTransition > 500) {
-        setIsPlaying((prev) => !prev)
-      } else {
-        console.log("[v0] Ignoring toggle - too soon after transition to nowPlaying")
-      }
+      setIsPlaying((prev) => !prev)
       return
     }
 
@@ -102,13 +97,11 @@ export function IPodClassic({
     } else if (navigation.level === "songs") {
       const song = currentList[selectedIndex] as Song
       console.log("[v0] Selecting song:", song.title)
-      lastNowPlayingTransitionRef.current = Date.now()
       setNavigation({
         ...navigation,
         level: "nowPlaying",
         selectedSong: song,
       })
-      setIsPlaying(true)
     }
   }
 
