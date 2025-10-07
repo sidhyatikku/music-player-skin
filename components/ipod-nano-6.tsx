@@ -132,7 +132,6 @@ export function IPodNano6({
   }
 
   const handleNext = () => {
-    playClick()
     if (navigation.level === "nowPlaying" && navigation.selectedAlbum) {
       const songs = navigation.selectedAlbum.songs
       const currentIndex = songs.findIndex((s) => s.id === navigation.selectedSong?.id)
@@ -147,7 +146,6 @@ export function IPodNano6({
   }
 
   const handlePrevious = () => {
-    playClick()
     if (navigation.level === "nowPlaying" && navigation.selectedAlbum) {
       const songs = navigation.selectedAlbum.songs
       const currentIndex = songs.findIndex((s) => s.id === navigation.selectedSong?.id)

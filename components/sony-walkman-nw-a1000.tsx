@@ -178,7 +178,6 @@ export function SonyWalkmanNWA1000({
   }
 
   const handleLeftPress = () => {
-    playClick()
     if (navigation.level === "nowPlaying") {
       const songs = navigation.selectedAlbum?.songs || []
       const currentSongIndex = songs.findIndex((s) => s === navigation.selectedSong)
@@ -192,7 +191,6 @@ export function SonyWalkmanNWA1000({
   }
 
   const handleRightPress = () => {
-    playClick()
     if (navigation.level === "nowPlaying") {
       const songs = navigation.selectedAlbum?.songs || []
       const currentSongIndex = songs.findIndex((s) => s === navigation.selectedSong)

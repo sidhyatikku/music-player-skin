@@ -67,7 +67,6 @@ export function DeviceCarousel() {
   const handlePrevious = () => {
     if (isTransitioning) return
 
-    playClick()
     console.log("[v0] Previous button pressed, current index:", currentDeviceIndex)
     setPreviousDeviceIndex(currentDeviceIndex)
     setIsTransitioning(true)
@@ -83,7 +82,6 @@ export function DeviceCarousel() {
   const handleNext = () => {
     if (isTransitioning) return
 
-    playClick()
     console.log("[v0] Next button pressed, current index:", currentDeviceIndex)
     setPreviousDeviceIndex(currentDeviceIndex)
     setIsTransitioning(true)
