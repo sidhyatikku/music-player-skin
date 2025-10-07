@@ -4,6 +4,14 @@ import { useMusicPlayback } from "@/contexts/music-playback-context"
 import { musicLibrary, type Artist, type Album, type Song } from "@/lib/music-library"
 import { ChevronLeft, ChevronDown, ChevronUp, Play, Pause } from "lucide-react"
 import { useClickWheelSound } from "@/hooks/use-click-wheel-sound"
+import {
+  trackSongPlay,
+  trackSongPause,
+  trackSongSkip,
+  trackNavigation,
+  trackMenuBack,
+  trackButtonPress,
+} from "@/lib/analytics"
 
 const getArtistName = (a: Artist | null | undefined) => a?.name ?? (a as any)?.title ?? ""
 const getAlbumTitle = (a: Album | null | undefined) => (a as any)?.title ?? (a as any)?.name ?? (a as any)?.album ?? ""
@@ -32,14 +40,22 @@ export function Nokia3310({ isActive = true, deviceName = "Nokia 3310" }: { isAc
 
   const handleUpPress = () => {
     playClick()
+    trackButtonPress("up", deviceName)
     if (navigation.level === "nowPlaying") {
-      // Navigate to previous song in playlist
       const songs = navigation.selectedAlbum?.songs || []
       const currentSongIndex = songs.findIndex((s) => s === navigation.selectedSong)
       if (currentSongIndex > 0) {
+        const prevSong = songs[currentSongIndex - 1]
+        trackSongSkip(
+          "previous",
+          navigation.selectedArtist?.name || "Unknown",
+          navigation.selectedAlbum?.title || (navigation.selectedAlbum as any)?.name || "Unknown",
+          prevSong.title,
+          deviceName,
+        )
         setNavigation({
           ...navigation,
-          selectedSong: songs[currentSongIndex - 1],
+          selectedSong: prevSong,
         })
       }
     } else {
@@ -49,14 +65,22 @@ export function Nokia3310({ isActive = true, deviceName = "Nokia 3310" }: { isAc
 
   const handleDownPress = () => {
     playClick()
+    trackButtonPress("down", deviceName)
     if (navigation.level === "nowPlaying") {
-      // Navigate to next song in playlist
       const songs = navigation.selectedAlbum?.songs || []
       const currentSongIndex = songs.findIndex((s) => s === navigation.selectedSong)
       if (currentSongIndex < songs.length - 1) {
+        const nextSong = songs[currentSongIndex + 1]
+        trackSongSkip(
+          "next",
+          navigation.selectedArtist?.name || "Unknown",
+          navigation.selectedAlbum?.title || (navigation.selectedAlbum as any)?.name || "Unknown",
+          nextSong.title,
+          deviceName,
+        )
         setNavigation({
           ...navigation,
-          selectedSong: songs[currentSongIndex + 1],
+          selectedSong: nextSong,
         })
       }
     } else {
@@ -67,15 +91,34 @@ export function Nokia3310({ isActive = true, deviceName = "Nokia 3310" }: { isAc
 
   const handleSelectPress = () => {
     playClick()
+    trackButtonPress("select", deviceName)
     const currentList = getCurrentList()
 
     if (navigation.level === "nowPlaying") {
+      if (navigation.selectedSong) {
+        if (isPlaying) {
+          trackSongPause(
+            navigation.selectedArtist?.name || "Unknown",
+            navigation.selectedAlbum?.title || (navigation.selectedAlbum as any)?.name || "Unknown",
+            navigation.selectedSong.title,
+            deviceName,
+          )
+        } else {
+          trackSongPlay(
+            navigation.selectedArtist?.name || "Unknown",
+            navigation.selectedAlbum?.title || (navigation.selectedAlbum as any)?.name || "Unknown",
+            navigation.selectedSong.title,
+            deviceName,
+          )
+        }
+      }
       setIsPlaying((prev) => !prev)
       return
     }
 
     if (navigation.level === "artists") {
       const artist = currentList[selectedIndex] as Artist
+      trackNavigation("artists", artist.name, deviceName)
       setNavigation({
         level: "albums",
         selectedArtist: artist,
@@ -85,6 +128,7 @@ export function Nokia3310({ isActive = true, deviceName = "Nokia 3310" }: { isAc
       setSelectedIndex(0)
     } else if (navigation.level === "albums") {
       const album = currentList[selectedIndex] as Album
+      trackNavigation("albums", (album as any).title || (album as any).name, deviceName)
       setNavigation({
         ...navigation,
         level: "songs",
@@ -94,6 +138,13 @@ export function Nokia3310({ isActive = true, deviceName = "Nokia 3310" }: { isAc
       setSelectedIndex(0)
     } else if (navigation.level === "songs") {
       const song = currentList[selectedIndex] as Song
+      trackNavigation("songs", song.title, deviceName)
+      trackSongPlay(
+        navigation.selectedArtist?.name || "Unknown",
+        navigation.selectedAlbum?.title || (navigation.selectedAlbum as any)?.name || "Unknown",
+        song.title,
+        deviceName,
+      )
       setNavigation({
         ...navigation,
         level: "nowPlaying",
@@ -105,12 +156,15 @@ export function Nokia3310({ isActive = true, deviceName = "Nokia 3310" }: { isAc
 
   const handleBackPress = () => {
     playClick()
+    trackButtonPress("back", deviceName)
     if (navigation.level === "nowPlaying") {
+      trackMenuBack("nowPlaying", "songs", deviceName)
       setNavigation({
         ...navigation,
         level: "songs",
       })
     } else if (navigation.level === "songs") {
+      trackMenuBack("songs", "albums", deviceName)
       setNavigation({
         ...navigation,
         level: "albums",
@@ -118,6 +172,7 @@ export function Nokia3310({ isActive = true, deviceName = "Nokia 3310" }: { isAc
       })
       setSelectedIndex(0)
     } else if (navigation.level === "albums") {
+      trackMenuBack("albums", "artists", deviceName)
       setNavigation({
         level: "artists",
         selectedArtist: null,

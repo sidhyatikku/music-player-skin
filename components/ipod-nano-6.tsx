@@ -7,6 +7,15 @@ import { useMusicPlayback } from "@/contexts/music-playback-context"
 import { musicLibrary, type Artist, type Album, type Song } from "@/lib/music-library"
 import { ChevronLeft, Play, Pause, SkipBack, SkipForward } from "lucide-react"
 import { useClickWheelSound } from "@/hooks/use-click-wheel-sound"
+import {
+  trackSongPlay,
+  trackSongPause,
+  trackSongSkip,
+  trackNavigation,
+  trackMenuBack,
+  trackButtonPress,
+  trackSeek,
+} from "@/lib/analytics"
 
 const albumLabel = (a?: Album | null) => a?.title || (a as any)?.name || ""
 
@@ -38,6 +47,16 @@ export function IPodNano6({
   const [duration, setDuration] = useState(0)
   const [isScrubbing, setIsScrubbing] = useState(false)
   const progressBarRef = useRef<HTMLDivElement>(null)
+
+  const handleVolumeUp = () => {
+    setVolume((prevVolume) => Math.min(prevVolume + 10, 100))
+    playClick()
+  }
+
+  const handleVolumeDown = () => {
+    setVolume((prevVolume) => Math.max(prevVolume - 10, 0))
+    playClick()
+  }
 
   useEffect(() => {
     if (!isPlaying || !playerRef.current) return
@@ -73,6 +92,7 @@ export function IPodNano6({
 
     playerRef.current.seekTo(seekTime, true)
     setCurrentTime(seekTime)
+    trackSeek(Math.floor(percentage * 100), deviceName)
   }
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -122,6 +142,7 @@ export function IPodNano6({
 
     if (navigation.level === "artists") {
       const artist = currentList[index] as Artist
+      trackNavigation("artists", artist.name, deviceName)
       setNavigation({
         level: "albums",
         selectedArtist: artist,
@@ -131,6 +152,7 @@ export function IPodNano6({
       setSelectedIndex(0)
     } else if (navigation.level === "albums") {
       const album = currentList[index] as Album
+      trackNavigation("albums", album.title || (album as any).name, deviceName)
       setNavigation({
         ...navigation,
         level: "songs",
@@ -140,6 +162,13 @@ export function IPodNano6({
       setSelectedIndex(0)
     } else if (navigation.level === "songs") {
       const song = currentList[index] as Song
+      trackNavigation("songs", song.title, deviceName)
+      trackSongPlay(
+        navigation.selectedArtist?.name || "Unknown",
+        navigation.selectedAlbum?.title || (navigation.selectedAlbum as any)?.name || "Unknown",
+        song.title,
+        deviceName,
+      )
       setNavigation({
         ...navigation,
         level: "nowPlaying",
@@ -150,12 +179,15 @@ export function IPodNano6({
   }
 
   const handleBack = () => {
+    trackButtonPress("back", deviceName)
     if (navigation.level === "nowPlaying") {
+      trackMenuBack("nowPlaying", "songs", deviceName)
       setNavigation({
         ...navigation,
         level: "songs",
       })
     } else if (navigation.level === "songs") {
+      trackMenuBack("songs", "albums", deviceName)
       setNavigation({
         ...navigation,
         level: "albums",
@@ -163,6 +195,7 @@ export function IPodNano6({
       })
       setSelectedIndex(0)
     } else if (navigation.level === "albums") {
+      trackMenuBack("albums", "artists", deviceName)
       setNavigation({
         level: "artists",
         selectedArtist: null,
@@ -178,9 +211,17 @@ export function IPodNano6({
       const songs = navigation.selectedAlbum.songs
       const currentIndex = songs.findIndex((s) => s.id === navigation.selectedSong?.id)
       if (currentIndex < songs.length - 1) {
+        const nextSong = songs[currentIndex + 1]
+        trackSongSkip(
+          "next",
+          navigation.selectedArtist?.name || "Unknown",
+          navigation.selectedAlbum?.title || (navigation.selectedAlbum as any)?.name || "Unknown",
+          nextSong.title,
+          deviceName,
+        )
         setNavigation({
           ...navigation,
-          selectedSong: songs[currentIndex + 1],
+          selectedSong: nextSong,
         })
         setIsPlaying(true)
       }
@@ -192,9 +233,17 @@ export function IPodNano6({
       const songs = navigation.selectedAlbum.songs
       const currentIndex = songs.findIndex((s) => s.id === navigation.selectedSong?.id)
       if (currentIndex > 0) {
+        const prevSong = songs[currentIndex - 1]
+        trackSongSkip(
+          "previous",
+          navigation.selectedArtist?.name || "Unknown",
+          navigation.selectedAlbum?.title || (navigation.selectedAlbum as any)?.name || "Unknown",
+          prevSong.title,
+          deviceName,
+        )
         setNavigation({
           ...navigation,
-          selectedSong: songs[currentIndex - 1],
+          selectedSong: prevSong,
         })
         setIsPlaying(true)
       }
@@ -202,19 +251,24 @@ export function IPodNano6({
   }
 
   const handlePlayPause = () => {
+    if (navigation.selectedSong) {
+      if (isPlaying) {
+        trackSongPause(
+          navigation.selectedArtist?.name || "Unknown",
+          navigation.selectedAlbum?.title || (navigation.selectedAlbum as any)?.name || "Unknown",
+          navigation.selectedSong.title,
+          deviceName,
+        )
+      } else {
+        trackSongPlay(
+          navigation.selectedArtist?.name || "Unknown",
+          navigation.selectedAlbum?.title || (navigation.selectedAlbum as any)?.name || "Unknown",
+          navigation.selectedSong.title,
+          deviceName,
+        )
+      }
+    }
     setIsPlaying(!isPlaying)
-  }
-
-  const handleVolumeUp = () => {
-    playClick()
-    setVolume((prev) => Math.min(100, prev + 10))
-    setShowVolumeUI(true)
-  }
-
-  const handleVolumeDown = () => {
-    playClick()
-    setVolume((prev) => Math.max(0, prev - 10))
-    setShowVolumeUI(true)
   }
 
   const getCurrentList = () => {

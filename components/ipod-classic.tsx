@@ -5,6 +5,14 @@ import { ClickWheel } from "./click-wheel"
 import { musicLibrary, type Artist, type Album, type Song } from "@/lib/music-library"
 import { useMusicPlayback } from "@/contexts/music-playback-context"
 import { useClickWheelSound } from "@/hooks/use-click-wheel-sound"
+import {
+  trackSongPlay,
+  trackSongSkip,
+  trackNavigation,
+  trackMenuBack,
+  trackVolumeChange,
+  trackButtonPress,
+} from "@/lib/analytics"
 
 export function IPodClassic({
   isActive = true,
@@ -66,6 +74,7 @@ export function IPodClassic({
 
   const handleSelect = () => {
     playClick()
+    trackButtonPress("select", deviceName)
     showUI()
 
     console.log("[v0] handleSelect called. Current level:", navigation.level, "Selected index:", selectedIndex)
@@ -80,6 +89,7 @@ export function IPodClassic({
     if (navigation.level === "artists") {
       const artist = currentList[selectedIndex] as Artist
       console.log("[v0] Selecting artist:", artist.name)
+      trackNavigation("artists", artist.name, deviceName)
       setNavigation({
         level: "albums",
         selectedArtist: artist,
@@ -90,6 +100,7 @@ export function IPodClassic({
     } else if (navigation.level === "albums") {
       const album = currentList[selectedIndex] as Album
       console.log("[v0] Selecting album:", album.name)
+      trackNavigation("albums", album.name, deviceName)
       setNavigation({
         ...navigation,
         level: "songs",
@@ -100,6 +111,13 @@ export function IPodClassic({
     } else if (navigation.level === "songs") {
       const song = currentList[selectedIndex] as Song
       console.log("[v0] Selecting song:", song.title)
+      trackNavigation("songs", song.title, deviceName)
+      trackSongPlay(
+        navigation.selectedArtist?.name || "Unknown",
+        navigation.selectedAlbum?.name || "Unknown",
+        song.title,
+        deviceName,
+      )
       setNavigation({
         ...navigation,
         level: "nowPlaying",
@@ -111,6 +129,7 @@ export function IPodClassic({
 
   const handleMenu = () => {
     playClick()
+    trackButtonPress("menu", deviceName)
     showUI()
 
     console.log("[v0] handleMenu called. Current level:", navigation.level)
@@ -122,11 +141,12 @@ export function IPodClassic({
     })
 
     if (navigation.level === "nowPlaying") {
+      trackMenuBack("nowPlaying", "songs", deviceName)
       setNavigation({
         level: "songs",
         selectedArtist: navigation.selectedArtist,
         selectedAlbum: navigation.selectedAlbum,
-        selectedSong: navigation.selectedSong, // Keep song to highlight it in the list
+        selectedSong: navigation.selectedSong,
       })
       const songs = navigation.selectedAlbum?.songs || []
       const currentSongIndex = songs.findIndex((s) => s.id === navigation.selectedSong?.id)
@@ -134,6 +154,7 @@ export function IPodClassic({
       console.log("[v0] Going back to songs. Setting index to:", newIndex)
       setSelectedIndex(newIndex)
     } else if (navigation.level === "songs") {
+      trackMenuBack("songs", "albums", deviceName)
       const currentAlbum = navigation.selectedAlbum
       setNavigation({
         level: "albums",
@@ -147,6 +168,7 @@ export function IPodClassic({
       console.log("[v0] Going back to albums. Current album:", currentAlbum?.name, "Setting index to:", newIndex)
       setSelectedIndex(newIndex)
     } else if (navigation.level === "albums") {
+      trackMenuBack("albums", "artists", deviceName)
       setNavigation({
         level: "artists",
         selectedArtist: null,
@@ -179,15 +201,24 @@ export function IPodClassic({
 
   const handleNext = () => {
     playClick()
+    trackButtonPress("next", deviceName)
     showUI()
 
     if (navigation.level === "nowPlaying" && navigation.selectedAlbum) {
       const songs = navigation.selectedAlbum.songs
       const currentIndex = songs.findIndex((s) => s.id === navigation.selectedSong?.id)
       if (currentIndex < songs.length - 1) {
+        const nextSong = songs[currentIndex + 1]
+        trackSongSkip(
+          "next",
+          navigation.selectedArtist?.name || "Unknown",
+          navigation.selectedAlbum?.name || "Unknown",
+          nextSong.title,
+          deviceName,
+        )
         setNavigation({
           ...navigation,
-          selectedSong: songs[currentIndex + 1],
+          selectedSong: nextSong,
         })
         setIsPlaying(true)
       }
@@ -196,15 +227,24 @@ export function IPodClassic({
 
   const handlePrevious = () => {
     playClick()
+    trackButtonPress("previous", deviceName)
     showUI()
 
     if (navigation.level === "nowPlaying" && navigation.selectedAlbum) {
       const songs = navigation.selectedAlbum.songs
       const currentIndex = songs.findIndex((s) => s.id === navigation.selectedSong?.id)
       if (currentIndex > 0) {
+        const prevSong = songs[currentIndex - 1]
+        trackSongSkip(
+          "previous",
+          navigation.selectedArtist?.name || "Unknown",
+          navigation.selectedAlbum?.name || "Unknown",
+          prevSong.title,
+          deviceName,
+        )
         setNavigation({
           ...navigation,
-          selectedSong: songs[currentIndex - 1],
+          selectedSong: prevSong,
         })
         setIsPlaying(true)
       }
@@ -213,6 +253,7 @@ export function IPodClassic({
 
   const handlePlayPause = () => {
     playClick()
+    trackButtonPress("play_pause", deviceName)
     showUI()
 
     if (navigation.level === "nowPlaying") {
@@ -222,7 +263,9 @@ export function IPodClassic({
 
   const handleVolumeChange = (newVolume: number) => {
     showUI()
-    setVolume(Math.max(0, Math.min(100, newVolume)))
+    const finalVolume = Math.max(0, Math.min(100, newVolume))
+    trackVolumeChange(finalVolume, deviceName)
+    setVolume(finalVolume)
   }
 
   const isInMenu = navigation.level !== "nowPlaying"

@@ -10,6 +10,7 @@ import { Nokia3310 } from "./nokia-3310"
 import { SonyWalkmanNWA1000 } from "./sony-walkman-nw-a1000"
 import { MusicPlaybackProvider } from "@/contexts/music-playback-context"
 import { useClickWheelSound } from "@/hooks/use-click-wheel-sound"
+import { trackDeviceSwitch } from "@/lib/analytics"
 
 const BASE_WIDTH = 500 // reference width that ALL devices render within
 
@@ -71,7 +72,9 @@ export function DeviceCarousel() {
     setPreviousDeviceIndex(currentDeviceIndex)
     setIsTransitioning(true)
     setScrollPosition((prev) => prev - 1)
-    setCurrentDeviceIndex((prev) => (prev - 1 + devices.length) % devices.length)
+    const newIndex = (currentDeviceIndex - 1 + devices.length) % devices.length
+    setCurrentDeviceIndex(newIndex)
+    trackDeviceSwitch(devices[newIndex].name)
 
     setTimeout(() => {
       setIsTransitioning(false)
@@ -86,7 +89,9 @@ export function DeviceCarousel() {
     setPreviousDeviceIndex(currentDeviceIndex)
     setIsTransitioning(true)
     setScrollPosition((prev) => prev + 1)
-    setCurrentDeviceIndex((prev) => (prev + 1) % devices.length)
+    const newIndex = (currentDeviceIndex + 1) % devices.length
+    setCurrentDeviceIndex(newIndex)
+    trackDeviceSwitch(devices[newIndex].name)
 
     setTimeout(() => {
       setIsTransitioning(false)
