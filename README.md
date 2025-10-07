@@ -16,9 +16,8 @@ This project brings together design nostalgia and web performance with a **Next.
 🎵 Choose between multiple iconic skins  
 💿 Browse artists, albums, and songs  
 📱 Fully responsive + optimized for mobile  
-🌗 Dark/light theme support  
 🎚️ Smooth animations + working audio player  
-💻 Built entirely in React, TypeScript, and Tailwind CSS
+💻 Built entirely in React, TypeScript, and Tailwind CSS, leveraging v0
 
 ---
 
