@@ -33,6 +33,7 @@ const devices: Device[] = [
 
 export function DeviceCarousel() {
   const [currentDeviceIndex, setCurrentDeviceIndex] = useState(2) // Start with iPod Classic (now at index 2)
+  const [previousDeviceIndex, setPreviousDeviceIndex] = useState<number | null>(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [scrollPosition, setScrollPosition] = useState(2)
   const [isMobile, setIsMobile] = useState(false)
@@ -65,12 +66,14 @@ export function DeviceCarousel() {
     if (isTransitioning) return
 
     console.log("[v0] Previous button pressed, current index:", currentDeviceIndex)
+    setPreviousDeviceIndex(currentDeviceIndex)
     setIsTransitioning(true)
     setScrollPosition((prev) => prev - 1)
     setCurrentDeviceIndex((prev) => (prev - 1 + devices.length) % devices.length)
 
     setTimeout(() => {
       setIsTransitioning(false)
+      setPreviousDeviceIndex(null)
     }, 700)
   }
 
@@ -78,12 +81,14 @@ export function DeviceCarousel() {
     if (isTransitioning) return
 
     console.log("[v0] Next button pressed, current index:", currentDeviceIndex)
+    setPreviousDeviceIndex(currentDeviceIndex)
     setIsTransitioning(true)
     setScrollPosition((prev) => prev + 1)
     setCurrentDeviceIndex((prev) => (prev + 1) % devices.length)
 
     setTimeout(() => {
       setIsTransitioning(false)
+      setPreviousDeviceIndex(null)
     }, 700)
   }
 
@@ -157,6 +162,41 @@ export function DeviceCarousel() {
           }}
         >
           <DeviceComponent isActive={isActive} deviceName={device.name} />
+        </div>
+      </div>,
+    )
+  }
+
+  if (isMobile && isTransitioning && previousDeviceIndex !== null) {
+    const previousDevice = devices[previousDeviceIndex]
+    const PreviousDeviceComponent = previousDevice.component
+    const centerOffset = BASE_WIDTH / 2
+
+    const activeScale = 1.3
+    const inactiveScale = 0.75
+    const transitionScale = fitScale * inactiveScale
+
+    renderedDevices.push(
+      <div
+        key={`previous-${previousDevice.id}`}
+        className="absolute left-1/2 top-1/2 transition-all duration-700 ease-in-out opacity-0"
+        style={{
+          transform: `translateX(-${centerOffset}px) translateY(-55%)`,
+          transformOrigin: "center center",
+          zIndex: 5,
+          pointerEvents: "none",
+          width: `${BASE_WIDTH}px`,
+          height: "auto",
+        }}
+      >
+        <div
+          className="flex items-center justify-center w-full h-full transition-transform duration-700 ease-in-out"
+          style={{
+            transform: `scale(${transitionScale})`,
+            transformOrigin: "center center",
+          }}
+        >
+          <PreviousDeviceComponent isActive={false} deviceName={previousDevice.name} />
         </div>
       </div>,
     )
