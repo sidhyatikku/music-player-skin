@@ -90,7 +90,7 @@ export function DeviceCarousel() {
   const renderRange = 3
   const renderedDevices = []
 
-  const availableHeight = vh - (isMobile ? 180 : 120) // Increased reserved space for navigation buttons on mobile from 120px to 180px
+  const availableHeight = vh - (isMobile ? 100 : 120) // Reduced mobile reserved space from 180px to 100px since buttons are now closer
   const heightBasedScale = availableHeight / (BASE_WIDTH * 2)
   const widthBasedScale = (vw * 0.9) / BASE_WIDTH
 
@@ -168,7 +168,7 @@ export function DeviceCarousel() {
         {/* Device Display Area */}
         <div className="relative flex items-center justify-center w-full">{renderedDevices}</div>
 
-        <div className="absolute bottom-20 md:bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 z-20">
+        <div className="absolute bottom-4 md:bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 z-20">
           <button
             onClick={handlePrevious}
             disabled={isTransitioning}
