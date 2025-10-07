@@ -17,51 +17,28 @@ export function ClickWheelSoundProvider({ children }: { children: ReactNode }) {
   const lastPlayTimeRef = useRef<number>(0)
   const currentSourceRef = useRef<AudioBufferSourceNode | null>(null)
   const velocityHistoryRef = useRef<number[]>([])
-  const [isInitialized, setIsInitialized] = useState(false)
-  const [initError, setInitError] = useState<string | null>(null)
 
   // Initialize Web Audio API and load sound
   useEffect(() => {
     const initAudio = async () => {
       try {
-        console.log("[v0] Initializing click wheel sound...")
-
         // Create AudioContext
         const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
         if (!AudioContextClass) {
-          const errorMsg = "Web Audio API not supported in this browser"
-          console.warn("[v0]", errorMsg)
-          setInitError(errorMsg)
-          setIsInitialized(true) // Mark as initialized even if failed, to prevent retries
+          console.warn("[v0] Web Audio API not supported")
           return
         }
 
         audioContextRef.current = new AudioContextClass()
 
-        console.log("[v0] Fetching click sound from /sounds/click.mov...")
+        // Load the click sound
         const response = await fetch("/sounds/click.mov")
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch sound file: ${response.status} ${response.statusText}`)
-        }
-
-        console.log("[v0] Sound file fetched, decoding audio data...")
         const arrayBuffer = await response.arrayBuffer()
-
-        if (arrayBuffer.byteLength === 0) {
-          throw new Error("Sound file is empty")
-        }
-
         audioBufferRef.current = await audioContextRef.current.decodeAudioData(arrayBuffer)
 
         console.log("[v0] Click sound loaded successfully")
-        setIsInitialized(true)
-        setInitError(null)
       } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : "Unknown error loading sound"
-        console.error("[v0] Failed to load click sound:", errorMsg, error)
-        setInitError(errorMsg)
-        setIsInitialized(true) // Mark as initialized to prevent infinite retries
+        console.error("[v0] Failed to load click sound:", error)
       }
     }
 
@@ -76,10 +53,7 @@ export function ClickWheelSoundProvider({ children }: { children: ReactNode }) {
 
   const playClick = useCallback(
     (velocity = 1) => {
-      if (!enabled || !isInitialized || !audioContextRef.current || !audioBufferRef.current) {
-        if (initError && enabled) {
-          console.warn("[v0] Cannot play click sound:", initError)
-        }
+      if (!enabled || !audioContextRef.current || !audioBufferRef.current) {
         return
       }
 
@@ -148,7 +122,7 @@ export function ClickWheelSoundProvider({ children }: { children: ReactNode }) {
         console.error("[v0] Error playing click sound:", error)
       }
     },
-    [enabled, isInitialized, initError],
+    [enabled],
   )
 
   return (
