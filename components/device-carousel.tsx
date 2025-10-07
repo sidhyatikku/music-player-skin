@@ -129,7 +129,7 @@ export function DeviceCarousel() {
     const DeviceComponent = device.component
     const isActive = offsetPos === 0
 
-    const activeScale = isMobile ? 1.3 : isTablet ? 0.85 : 1.4 // Increased desktop active scale from 1 to 1.4 (40% increase)
+    const activeScale = isMobile ? 1.3 : isTablet ? 0.85 : 1.3 // Reduced desktop active scale from 1.4 (40% increase) to 1.3 (30% increase)
     const inactiveScale = isMobile ? 0.75 : isTablet ? 0.75 : 0.8
     const finalScale = fitScale * (isActive ? activeScale : inactiveScale)
 
