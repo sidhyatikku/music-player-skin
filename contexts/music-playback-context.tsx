@@ -216,14 +216,18 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
     if (playerReady && playerRef.current && navigation.selectedSong) {
       // Only control playback if we're not loading a new song
       if (!isLoadingRef.current) {
-        if (isPlaying && !isPlayingRef.current) {
+        console.log("[v0] Playback control - isPlaying:", isPlaying, "isPlayingRef:", isPlayingRef.current)
+
+        if (isPlaying) {
           try {
+            console.log("[v0] Calling playVideo()")
             playerRef.current.playVideo()
           } catch (error) {
             console.error("Error playing video:", error)
           }
-        } else if (!isPlaying && isPlayingRef.current) {
+        } else {
           try {
+            console.log("[v0] Calling pauseVideo()")
             playerRef.current.pauseVideo()
           } catch (error) {
             console.error("Error pausing video:", error)
