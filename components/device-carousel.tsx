@@ -38,6 +38,7 @@ export function DeviceCarousel() {
   const [isMobile, setIsMobile] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
   const [vw, setVw] = useState<number>(typeof window === "undefined" ? 1024 : window.innerWidth)
+  const [vh, setVh] = useState<number>(typeof window === "undefined" ? 768 : window.innerHeight)
 
   useEffect(() => {
     const checkMobile = () => {
@@ -51,7 +52,10 @@ export function DeviceCarousel() {
   }, [])
 
   useEffect(() => {
-    const onResize = () => setVw(window.innerWidth)
+    const onResize = () => {
+      setVw(window.innerWidth)
+      setVh(window.innerHeight)
+    }
     onResize()
     window.addEventListener("resize", onResize)
     return () => window.removeEventListener("resize", onResize)
@@ -60,6 +64,7 @@ export function DeviceCarousel() {
   const handlePrevious = () => {
     if (isTransitioning) return
 
+    console.log("[v0] Previous button pressed, current index:", currentDeviceIndex)
     setIsTransitioning(true)
     setScrollPosition((prev) => prev - 1)
     setCurrentDeviceIndex((prev) => (prev - 1 + devices.length) % devices.length)
@@ -72,6 +77,7 @@ export function DeviceCarousel() {
   const handleNext = () => {
     if (isTransitioning) return
 
+    console.log("[v0] Next button pressed, current index:", currentDeviceIndex)
     setIsTransitioning(true)
     setScrollPosition((prev) => prev + 1)
     setCurrentDeviceIndex((prev) => (prev + 1) % devices.length)
@@ -83,9 +89,33 @@ export function DeviceCarousel() {
 
   const renderRange = 3
   const renderedDevices = []
-  const fitScale = Math.min((vw * 0.9) / BASE_WIDTH, 1) // never upscale past 1
+
+  const availableHeight = vh - 120
+  const heightBasedScale = availableHeight / (BASE_WIDTH * 2)
+  const widthBasedScale = (vw * 0.9) / BASE_WIDTH
+
+  const fitScale = Math.min(widthBasedScale, heightBasedScale, 1)
 
   const spacing = BASE_WIDTH * fitScale * (isMobile ? 0.85 : isTablet ? 0.9 : 0.95)
+
+  console.log(
+    "[v0] Carousel render - vw:",
+    vw,
+    "vh:",
+    vh,
+    "widthScale:",
+    widthBasedScale,
+    "heightScale:",
+    heightBasedScale,
+    "fitScale:",
+    fitScale,
+    "spacing:",
+    spacing,
+    "isMobile:",
+    isMobile,
+    "isTablet:",
+    isTablet,
+  )
 
   for (let offsetPos = -renderRange; offsetPos <= renderRange; offsetPos++) {
     const virtualIndex = scrollPosition + offsetPos
@@ -94,11 +124,15 @@ export function DeviceCarousel() {
     const DeviceComponent = device.component
     const isActive = offsetPos === 0
 
-    const activeScale = isTablet ? 0.7 : 1
-    const inactiveScale = isTablet ? 0.56 : 0.8
+    const activeScale = isMobile ? 0.7 : isTablet ? 0.7 : 1
+    const inactiveScale = isMobile ? 0.56 : isTablet ? 0.56 : 0.8
     const finalScale = fitScale * (isActive ? activeScale : inactiveScale)
 
     const centerOffset = BASE_WIDTH / 2 // 250px - half of the fixed container width
+
+    console.log(
+      `[v0] Device ${device.name} (${isActive ? "ACTIVE" : "inactive"}) - width: ${BASE_WIDTH}px, finalScale: ${finalScale}, rendered width: ${BASE_WIDTH * finalScale}px, height: auto (aspect-ratio based)`,
+    )
 
     renderedDevices.push(
       <div
