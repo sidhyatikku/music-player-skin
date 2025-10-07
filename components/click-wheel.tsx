@@ -103,18 +103,19 @@ export function ClickWheel({
         setRotationDelta(0)
       }
     } else {
-      // Volume control in increments of 10
-      if (newDelta > threshold) {
-        onVolumeChange(Math.min(100, volume + 10))
-        setRotationDelta(0)
-        if (isMobile) {
-          console.log("[v0] Volume UI updated (use device buttons to control actual volume)")
+      if (!isMobile) {
+        // Volume control in increments of 10 (desktop only)
+        if (newDelta > threshold) {
+          onVolumeChange(Math.min(100, volume + 10))
+          setRotationDelta(0)
+        } else if (newDelta < -threshold) {
+          onVolumeChange(Math.max(0, volume - 10))
+          setRotationDelta(0)
         }
-      } else if (newDelta < -threshold) {
-        onVolumeChange(Math.max(0, volume - 10))
-        setRotationDelta(0)
-        if (isMobile) {
-          console.log("[v0] Volume UI updated (use device buttons to control actual volume)")
+      } else {
+        // On mobile, reset delta but don't change volume
+        if (Math.abs(newDelta) > threshold) {
+          setRotationDelta(0)
         }
       }
     }
