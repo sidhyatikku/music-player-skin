@@ -4,6 +4,7 @@ import { IPodDisplay } from "./ipod-display"
 import { ClickWheel } from "./click-wheel"
 import { musicLibrary, type Artist, type Album, type Song } from "@/lib/music-library"
 import { useMusicPlayback } from "@/contexts/music-playback-context"
+import { useClickWheelSound } from "@/hooks/use-click-wheel-sound"
 
 export function IPodClassic({
   isActive = true,
@@ -11,6 +12,8 @@ export function IPodClassic({
 }: { isActive?: boolean; deviceName?: string }) {
   const { navigation, setNavigation, selectedIndex, setSelectedIndex, isPlaying, setIsPlaying, volume, setVolume } =
     useMusicPlayback()
+
+  const { playClick } = useClickWheelSound()
 
   const [hideUI, setHideUI] = useState(false)
 
@@ -62,6 +65,7 @@ export function IPodClassic({
   }, [navigation.level, navigation.selectedArtist, navigation.selectedAlbum])
 
   const handleSelect = () => {
+    playClick()
     showUI()
 
     console.log("[v0] handleSelect called. Current level:", navigation.level, "Selected index:", selectedIndex)
@@ -106,6 +110,7 @@ export function IPodClassic({
   }
 
   const handleMenu = () => {
+    playClick()
     showUI()
 
     console.log("[v0] handleMenu called. Current level:", navigation.level)
@@ -173,6 +178,7 @@ export function IPodClassic({
   }
 
   const handleNext = () => {
+    playClick()
     showUI()
 
     if (navigation.level === "nowPlaying" && navigation.selectedAlbum) {
@@ -189,6 +195,7 @@ export function IPodClassic({
   }
 
   const handlePrevious = () => {
+    playClick()
     showUI()
 
     if (navigation.level === "nowPlaying" && navigation.selectedAlbum) {
@@ -205,6 +212,7 @@ export function IPodClassic({
   }
 
   const handlePlayPause = () => {
+    playClick()
     showUI()
 
     if (navigation.level === "nowPlaying") {
