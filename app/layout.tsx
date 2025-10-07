@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import { Amiri, Fragment_Mono as Bitcount_Mono_Single, Rokkitt } from "next/font/google"
 import "./globals.css"
+import { ClickWheelSoundProvider } from "@/hooks/use-click-wheel-sound"
 
 const amiri = Amiri({
   weight: ["400", "700"],
@@ -66,10 +67,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${amiri.variable} ${bitcount.variable} ${rokkitt.variable}`}>
       <body className="font-sans">
-        <Suspense fallback={<div>Loading...</div>}>
-          {children}
-          <Analytics />
-        </Suspense>
+        <ClickWheelSoundProvider>
+          <Suspense fallback={<div>Loading...</div>}>
+            {children}
+            <Analytics />
+          </Suspense>
+        </ClickWheelSoundProvider>
       </body>
     </html>
   )
