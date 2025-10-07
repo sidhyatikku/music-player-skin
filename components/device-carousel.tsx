@@ -9,6 +9,7 @@ import { IPodNano6 } from "./ipod-nano-6"
 import { Nokia3310 } from "./nokia-3310"
 import { SonyWalkmanNWA1000 } from "./sony-walkman-nw-a1000"
 import { MusicPlaybackProvider } from "@/contexts/music-playback-context"
+import { useClickWheelSound } from "@/hooks/use-click-wheel-sound"
 
 const BASE_WIDTH = 500 // reference width that ALL devices render within
 
@@ -40,6 +41,7 @@ export function DeviceCarousel() {
   const [isTablet, setIsTablet] = useState(false)
   const [vw, setVw] = useState<number>(typeof window === "undefined" ? 1024 : window.innerWidth)
   const [vh, setVh] = useState<number>(typeof window === "undefined" ? 768 : window.innerHeight)
+  const { playClick } = useClickWheelSound()
 
   useEffect(() => {
     const checkMobile = () => {
@@ -65,6 +67,7 @@ export function DeviceCarousel() {
   const handlePrevious = () => {
     if (isTransitioning) return
 
+    playClick()
     console.log("[v0] Previous button pressed, current index:", currentDeviceIndex)
     setPreviousDeviceIndex(currentDeviceIndex)
     setIsTransitioning(true)
@@ -80,6 +83,7 @@ export function DeviceCarousel() {
   const handleNext = () => {
     if (isTransitioning) return
 
+    playClick()
     console.log("[v0] Next button pressed, current index:", currentDeviceIndex)
     setPreviousDeviceIndex(currentDeviceIndex)
     setIsTransitioning(true)

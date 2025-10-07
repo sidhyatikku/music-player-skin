@@ -3,6 +3,7 @@
 import { useMusicPlayback } from "@/contexts/music-playback-context"
 import { musicLibrary, type Artist, type Album, type Song } from "@/lib/music-library"
 import { ChevronLeft, ChevronDown, ChevronUp, Play, Pause } from "lucide-react"
+import { useClickWheelSound } from "@/hooks/use-click-wheel-sound"
 
 const getArtistName = (a: Artist | null | undefined) => a?.name ?? (a as any)?.title ?? ""
 const getAlbumTitle = (a: Album | null | undefined) => (a as any)?.title ?? (a as any)?.name ?? (a as any)?.album ?? ""
@@ -14,6 +15,7 @@ const getSongYear = (s: Song | null | undefined, album: Album | null | undefined
 
 export function Nokia3310({ isActive = true, deviceName = "Nokia 3310" }: { isActive?: boolean; deviceName?: string }) {
   const { navigation, setNavigation, selectedIndex, setSelectedIndex, isPlaying, setIsPlaying } = useMusicPlayback()
+  const { playClick } = useClickWheelSound()
 
   const getCurrentList = () => {
     switch (navigation.level) {
@@ -29,6 +31,7 @@ export function Nokia3310({ isActive = true, deviceName = "Nokia 3310" }: { isAc
   }
 
   const handleUpPress = () => {
+    playClick()
     if (navigation.level === "nowPlaying") {
       // Navigate to previous song in playlist
       const songs = navigation.selectedAlbum?.songs || []
@@ -45,6 +48,7 @@ export function Nokia3310({ isActive = true, deviceName = "Nokia 3310" }: { isAc
   }
 
   const handleDownPress = () => {
+    playClick()
     if (navigation.level === "nowPlaying") {
       // Navigate to next song in playlist
       const songs = navigation.selectedAlbum?.songs || []
@@ -62,6 +66,7 @@ export function Nokia3310({ isActive = true, deviceName = "Nokia 3310" }: { isAc
   }
 
   const handleSelectPress = () => {
+    playClick()
     const currentList = getCurrentList()
 
     if (navigation.level === "nowPlaying") {
@@ -99,6 +104,7 @@ export function Nokia3310({ isActive = true, deviceName = "Nokia 3310" }: { isAc
   }
 
   const handleBackPress = () => {
+    playClick()
     if (navigation.level === "nowPlaying") {
       setNavigation({
         ...navigation,

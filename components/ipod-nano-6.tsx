@@ -6,6 +6,7 @@ import { useState, useEffect } from "react"
 import { useMusicPlayback } from "@/contexts/music-playback-context"
 import { musicLibrary, type Artist, type Album, type Song } from "@/lib/music-library"
 import { ChevronLeft, Play, Pause, SkipBack, SkipForward } from "lucide-react"
+import { useClickWheelSound } from "@/hooks/use-click-wheel-sound"
 
 const albumLabel = (a?: Album | null) => a?.title || (a as any)?.name || ""
 
@@ -31,6 +32,7 @@ export function IPodNano6({
     volume,
     setVolume,
   } = useMusicPlayback()
+  const { playClick } = useClickWheelSound()
   const [showVolumeUI, setShowVolumeUI] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -72,6 +74,7 @@ export function IPodNano6({
   }
 
   const handleItemSelect = (index: number) => {
+    playClick()
     const currentList = getCurrentList()
 
     if (navigation.level === "artists") {
@@ -104,6 +107,7 @@ export function IPodNano6({
   }
 
   const handleBack = () => {
+    playClick()
     if (navigation.level === "nowPlaying") {
       setNavigation({
         ...navigation,
@@ -128,6 +132,7 @@ export function IPodNano6({
   }
 
   const handleNext = () => {
+    playClick()
     if (navigation.level === "nowPlaying" && navigation.selectedAlbum) {
       const songs = navigation.selectedAlbum.songs
       const currentIndex = songs.findIndex((s) => s.id === navigation.selectedSong?.id)
@@ -142,6 +147,7 @@ export function IPodNano6({
   }
 
   const handlePrevious = () => {
+    playClick()
     if (navigation.level === "nowPlaying" && navigation.selectedAlbum) {
       const songs = navigation.selectedAlbum.songs
       const currentIndex = songs.findIndex((s) => s.id === navigation.selectedSong?.id)
@@ -156,15 +162,18 @@ export function IPodNano6({
   }
 
   const handlePlayPause = () => {
+    playClick()
     setIsPlaying(!isPlaying)
   }
 
   const handleVolumeUp = () => {
+    playClick()
     setVolume((prev) => Math.min(100, prev + 10))
     setShowVolumeUI(true)
   }
 
   const handleVolumeDown = () => {
+    playClick()
     setVolume((prev) => Math.max(0, prev - 10))
     setShowVolumeUI(true)
   }
