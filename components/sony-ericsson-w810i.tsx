@@ -2,20 +2,25 @@
 
 import { useState } from "react"
 import { useMusicPlayback } from "@/contexts/music-playback-context"
+import { useClickWheelSound } from "@/hooks/use-click-wheel-sound"
 
 export function SonyEricssonW810i({ isActive = true }: { isActive?: boolean }) {
   const { isPlaying, setIsPlaying } = useMusicPlayback()
+  const { playClick } = useClickWheelSound()
   const [selectedMenu, setSelectedMenu] = useState(0)
 
   const handleUpPress = () => {
+    playClick()
     setSelectedMenu((prev) => (prev > 0 ? prev - 1 : 3))
   }
 
   const handleDownPress = () => {
+    playClick()
     setSelectedMenu((prev) => (prev < 3 ? prev + 1 : 0))
   }
 
   const handlePlayPause = () => {
+    playClick()
     setIsPlaying(!isPlaying)
   }
 

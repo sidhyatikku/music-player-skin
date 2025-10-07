@@ -2,16 +2,20 @@
 
 import { useState } from "react"
 import { useMusicPlayback } from "@/contexts/music-playback-context"
+import { useClickWheelSound } from "@/hooks/use-click-wheel-sound"
 
 export function MotorolaRazr({ isActive = true }: { isActive?: boolean }) {
   const { isPlaying, setIsPlaying } = useMusicPlayback()
+  const { playClick } = useClickWheelSound()
   const [isOpen, setIsOpen] = useState(true)
 
   const handleToggleFlip = () => {
+    playClick()
     setIsOpen(!isOpen)
   }
 
   const handlePlayPause = () => {
+    playClick()
     setIsPlaying(!isPlaying)
   }
 

@@ -2,10 +2,11 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useMusicPlayback } from "@/contexts/music-playback-context"
 import { musicLibrary, type Artist, type Album, type Song } from "@/lib/music-library"
 import { ChevronLeft, Play, Pause, SkipBack, SkipForward } from "lucide-react"
+import { useClickWheelSound } from "@/hooks/use-click-wheel-sound"
 
 const albumLabel = (a?: Album | null) => a?.title || (a as any)?.name || ""
 
@@ -31,9 +32,12 @@ export function IPodNano6({
     volume,
     setVolume,
   } = useMusicPlayback()
+  const { playClick } = useClickWheelSound()
   const [showVolumeUI, setShowVolumeUI] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
+  const [isScrubbing, setIsScrubbing] = useState(false)
+  const progressBarRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!isPlaying || !playerRef.current) return
@@ -59,17 +63,59 @@ export function IPodNano6({
     }
   }, [showVolumeUI])
 
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!playerRef.current || !duration) return
+  const handleSeek = (clientX: number) => {
+    if (!playerRef.current || !duration || !progressBarRef.current) return
 
-    const rect = e.currentTarget.getBoundingClientRect()
-    const clickX = e.clientX - rect.left
-    const percentage = clickX / rect.width
+    const rect = progressBarRef.current.getBoundingClientRect()
+    const clickX = clientX - rect.left
+    const percentage = Math.max(0, Math.min(1, clickX / rect.width))
     const seekTime = percentage * duration
 
     playerRef.current.seekTo(seekTime, true)
     setCurrentTime(seekTime)
   }
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    setIsScrubbing(true)
+    handleSeek(e.clientX)
+  }
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isScrubbing) {
+      handleSeek(e.clientX)
+    }
+  }
+
+  const handleMouseUp = () => {
+    setIsScrubbing(false)
+  }
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    setIsScrubbing(true)
+    handleSeek(e.touches[0].clientX)
+  }
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (isScrubbing && e.touches[0]) {
+      handleSeek(e.touches[0].clientX)
+    }
+  }
+
+  useEffect(() => {
+    if (isScrubbing) {
+      window.addEventListener("mousemove", handleMouseMove)
+      window.addEventListener("mouseup", handleMouseUp)
+      window.addEventListener("touchmove", handleTouchMove)
+      window.addEventListener("touchend", handleMouseUp)
+
+      return () => {
+        window.removeEventListener("mousemove", handleMouseMove)
+        window.removeEventListener("mouseup", handleMouseUp)
+        window.removeEventListener("touchmove", handleTouchMove)
+        window.removeEventListener("touchend", handleMouseUp)
+      }
+    }
+  }, [isScrubbing, duration])
 
   const handleItemSelect = (index: number) => {
     const currentList = getCurrentList()
@@ -160,11 +206,13 @@ export function IPodNano6({
   }
 
   const handleVolumeUp = () => {
+    playClick()
     setVolume((prev) => Math.min(100, prev + 10))
     setShowVolumeUI(true)
   }
 
   const handleVolumeDown = () => {
+    playClick()
     setVolume((prev) => Math.max(0, prev - 10))
     setShowVolumeUI(true)
   }
@@ -297,16 +345,24 @@ export function IPodNano6({
                             {formatTime(currentTime)}
                           </span>
                           <div
-                            className="flex-1 h-1 bg-white/20 rounded-full relative cursor-pointer"
-                            onClick={handleSeek}
+                            ref={progressBarRef}
+                            className="flex-1 h-1 bg-white/20 rounded-full relative cursor-pointer select-none"
+                            onMouseDown={handleMouseDown}
+                            onTouchStart={handleTouchStart}
                           >
                             <div
-                              className="absolute left-0 top-0 h-full bg-white/60 rounded-full transition-all duration-100"
+                              className="absolute left-0 top-0 h-full bg-white/60 rounded-full transition-all duration-100 pointer-events-none"
                               style={{ width: duration ? `${(currentTime / duration) * 100}%` : "0%" }}
                             ></div>
                             <div
-                              className="absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full shadow-lg transition-all duration-100"
-                              style={{ left: duration ? `${(currentTime / duration) * 100}%` : "0%" }}
+                              className={`absolute top-1/2 -translate-y-1/2 bg-white rounded-full shadow-lg transition-all pointer-events-none ${
+                                isScrubbing ? "w-3 h-3 scale-110" : "w-2 h-2"
+                              }`}
+                              style={{
+                                left: duration
+                                  ? `calc(${(currentTime / duration) * 100}% - ${isScrubbing ? "6px" : "4px"})`
+                                  : "0%",
+                              }}
                             ></div>
                           </div>
                           <span className="text-white/60 text-[9px] font-mono min-w-[32px] text-right">

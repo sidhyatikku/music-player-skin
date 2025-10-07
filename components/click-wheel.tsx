@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useRef, useState, useEffect } from "react"
 import { SkipBack, SkipForward } from "lucide-react"
+import { useClickWheelSound } from "@/hooks/use-click-wheel-sound"
 
 interface ClickWheelProps {
   onNext: () => void
@@ -36,6 +37,8 @@ export function ClickWheel({
   const [isRotating, setIsRotating] = useState(false)
   const [lastAngle, setLastAngle] = useState(0)
   const [rotationDelta, setRotationDelta] = useState(0)
+  const { playClick } = useClickWheelSound()
+  const lastMoveTimeRef = useRef<number>(0)
 
   const getAngle = (e: MouseEvent | TouchEvent) => {
     if (!wheelRef.current) return 0
@@ -78,6 +81,11 @@ export function ClickWheel({
     const newDelta = rotationDelta + normalizedDiff
     setRotationDelta(newDelta)
 
+    const now = performance.now()
+    const timeDelta = now - lastMoveTimeRef.current
+    const velocity = timeDelta > 0 ? Math.abs(normalizedDiff) / (timeDelta / 1000) : 0
+    lastMoveTimeRef.current = now
+
     // Scroll/volume threshold
     const threshold = 0.3
 
@@ -85,18 +93,22 @@ export function ClickWheel({
       // Scroll when rotation exceeds threshold
       if (newDelta > threshold) {
         onScrollDown()
+        playClick(Math.min(1, velocity / 5))
         setRotationDelta(0)
       } else if (newDelta < -threshold) {
         onScrollUp()
+        playClick(Math.min(1, velocity / 5))
         setRotationDelta(0)
       }
     } else {
       // Volume control in increments of 10
       if (newDelta > threshold) {
         onVolumeChange(Math.min(100, volume + 10))
+        playClick(Math.min(1, velocity / 5))
         setRotationDelta(0)
       } else if (newDelta < -threshold) {
         onVolumeChange(Math.max(0, volume - 10))
+        playClick(Math.min(1, velocity / 5))
         setRotationDelta(0)
       }
     }

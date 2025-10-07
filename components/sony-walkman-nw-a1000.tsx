@@ -4,6 +4,7 @@ import { useMusicPlayback } from "@/contexts/music-playback-context"
 import { musicLibrary, type Artist, type Album, type Song } from "@/lib/music-library"
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Play, Pause } from "lucide-react"
 import { useState, useEffect } from "react"
+import { useClickWheelSound } from "@/hooks/use-click-wheel-sound"
 
 const getArtistName = (a: Artist | null | undefined) => a?.name ?? (a as any)?.title ?? ""
 const getAlbumTitle = (a: Album | null | undefined) => (a as any)?.title ?? (a as any)?.name ?? (a as any)?.album ?? ""
@@ -28,6 +29,7 @@ export function SonyWalkmanNWA1000({
     setVolume,
     playerRef,
   } = useMusicPlayback()
+  const { playClick } = useClickWheelSound()
 
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -77,6 +79,7 @@ export function SonyWalkmanNWA1000({
   }
 
   const handleUpPress = () => {
+    playClick()
     console.log("[v0] Up button pressed, current level:", navigation.level, "selectedIndex:", selectedIndex)
     if (navigation.level === "nowPlaying") {
       const songs = navigation.selectedAlbum?.songs || []
@@ -95,6 +98,7 @@ export function SonyWalkmanNWA1000({
   }
 
   const handleDownPress = () => {
+    playClick()
     if (navigation.level === "nowPlaying") {
       const songs = navigation.selectedAlbum?.songs || []
       const currentSongIndex = songs.findIndex((s) => s === navigation.selectedSong)
@@ -111,6 +115,7 @@ export function SonyWalkmanNWA1000({
   }
 
   const handleSelectPress = () => {
+    playClick()
     const currentList = getCurrentList()
 
     if (navigation.level === "nowPlaying") {
@@ -148,6 +153,7 @@ export function SonyWalkmanNWA1000({
   }
 
   const handleBackPress = () => {
+    playClick()
     if (navigation.level === "nowPlaying") {
       setNavigation({
         ...navigation,
@@ -240,11 +246,13 @@ export function SonyWalkmanNWA1000({
   }
 
   const handleVolumeUp = () => {
+    playClick()
     setVolume(Math.min(100, volume + 10))
     setShowVolumeIndicator(true)
   }
 
   const handleVolumeDown = () => {
+    playClick()
     setVolume(Math.max(0, volume - 10))
     setShowVolumeIndicator(true)
   }

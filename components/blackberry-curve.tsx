@@ -1,10 +1,13 @@
 "use client"
 import { useMusicPlayback } from "@/contexts/music-playback-context"
+import { useClickWheelSound } from "@/hooks/use-click-wheel-sound"
 
 export function BlackBerryCurve({ isActive = true }: { isActive?: boolean }) {
   const { isPlaying, setIsPlaying } = useMusicPlayback()
+  const { playClick } = useClickWheelSound()
 
   const handlePlayPause = () => {
+    playClick()
     setIsPlaying(!isPlaying)
   }
 

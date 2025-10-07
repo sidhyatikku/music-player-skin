@@ -43,29 +43,29 @@ This project brings together design nostalgia and web performance with a **Next.
 ### 🧩 Installation
 
 1. **Fork this repository**
-   ```bash
+   \`\`\`bash
    Click the "Fork" button on top-right of this page
-   ```
+   \`\`\`
 
 2. **Clone your fork**
-   ```bash
+   \`\`\`bash
    git clone https://github.com/YOUR_USERNAME/music-player-skin.git
    cd music-player-skin
-   ```
+   \`\`\`
 
 3. **Install dependencies**
-   ```bash
+   \`\`\`bash
    npm install
    # or
    yarn install
-   ```
+   \`\`\`
 
 4. **Run the development server**
-   ```bash
+   \`\`\`bash
    npm run dev
    # or
    yarn dev
-   ```
+   \`\`\`
 
 5. **Open your browser**
    Visit [http://localhost:3000](http://localhost:3000) 🎧
@@ -74,7 +74,7 @@ This project brings together design nostalgia and web performance with a **Next.
 
 ## 📁 Project Structure
 
-```
+\`\`\`
 music-player-skin/
 ├── app/                 # Next.js app directory
 │   ├── layout.tsx       # Root layout
@@ -91,7 +91,7 @@ music-player-skin/
 ├── lib/                 # Music library data + types
 ├── public/              # Static assets (album art, icons, etc.)
 └── scripts/             # Node/JS utility scripts
-```
+\`\`\`
 
 ---
 
