@@ -76,6 +76,9 @@ export function IPodDisplay({ navigation, selectedIndex, isPlaying, volume, hide
                 <img
                   src={artist.photoUrl || "/placeholder.svg"}
                   alt={artist.name}
+                  onError={(e) => {
+                    e.currentTarget.src = "/cd-fallback.png"
+                  }}
                   className="w-6 h-6 rounded object-cover flex-shrink-0 shadow-[0_1px_2px_rgba(0,0,0,0.2)]"
                 />
               )}
@@ -108,6 +111,9 @@ export function IPodDisplay({ navigation, selectedIndex, isPlaying, volume, hide
                 <img
                   src={album.coverUrl || "/placeholder.svg"}
                   alt={album.name}
+                  onError={(e) => {
+                    e.currentTarget.src = "/cd-fallback.png"
+                  }}
                   className="w-8 h-8 rounded object-cover flex-shrink-0 shadow-[0_1px_2px_rgba(0,0,0,0.2)]"
                 />
               )}
@@ -185,6 +191,9 @@ export function IPodDisplay({ navigation, selectedIndex, isPlaying, volume, hide
                 <img
                   src={navigation.selectedAlbum.coverUrl || "/placeholder.svg"}
                   alt={navigation.selectedAlbum.name}
+                  onError={(e) => {
+                    e.currentTarget.src = "/cd-fallback.png"
+                  }}
                   className="w-32 h-32 object-cover rounded shadow-lg border border-gray-200"
                 />
               ) : (
