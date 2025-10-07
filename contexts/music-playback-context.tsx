@@ -45,6 +45,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   const isPlayingRef = useRef(isPlaying)
   const isLoadingRef = useRef(false)
   const navigationRef = useRef(navigation)
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
     navigationRef.current = navigation
@@ -183,6 +184,20 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent.toLowerCase()
+      const isMobileDevice =
+        /iphone|ipad|ipod|android|webos|blackberry|windows phone/i.test(userAgent) ||
+        (navigator.maxTouchPoints && navigator.maxTouchPoints > 2)
+      setIsMobile(isMobileDevice)
+      if (isMobileDevice) {
+        console.log("[v0] Mobile device detected - volume control via device buttons only")
+      }
+    }
+    checkMobile()
+  }, [])
+
+  useEffect(() => {
     if (playerReady && playerRef.current && navigation.selectedSong) {
       const songChanged = previousSongRef.current?.id !== navigation.selectedSong.id
 
@@ -238,10 +253,10 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   }, [isPlaying, playerReady, navigation.selectedSong])
 
   useEffect(() => {
-    if (playerReady && playerRef.current) {
+    if (playerReady && playerRef.current && !isMobile) {
       playerRef.current.setVolume(volume)
     }
-  }, [volume, playerReady])
+  }, [volume, playerReady, isMobile])
 
   return (
     <MusicPlaybackContext.Provider

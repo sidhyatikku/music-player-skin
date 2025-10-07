@@ -26,6 +26,18 @@ export function IPodDisplay({ navigation, selectedIndex, isPlaying, volume, hide
   const selectedItemRef = useRef<HTMLDivElement>(null)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent.toLowerCase()
+      const isMobileDevice =
+        /iphone|ipad|ipod|android|webos|blackberry|windows phone/i.test(userAgent) ||
+        (navigator.maxTouchPoints && navigator.maxTouchPoints > 2)
+      setIsMobile(isMobileDevice)
+    }
+    checkMobile()
+  }, [])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -173,12 +185,16 @@ export function IPodDisplay({ navigation, selectedIndex, isPlaying, volume, hide
             <span className="text-[10px] font-semibold text-black">Now Playing</span>
             <div className="flex items-center gap-1">
               <div className="text-[10px] text-black">{isPlaying ? "▶" : "❚❚"}</div>
-              <div className="w-12 h-1.5 bg-gray-300 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-green-500 rounded-full transition-all duration-150"
-                  style={{ width: `${volume}%` }}
-                ></div>
-              </div>
+              {isMobile ? (
+                <div className="text-[9px] text-gray-600 italic">Device Vol</div>
+              ) : (
+                <div className="w-12 h-1.5 bg-gray-300 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-green-500 rounded-full transition-all duration-150"
+                    style={{ width: `${volume}%` }}
+                  ></div>
+                </div>
+              )}
             </div>
           </div>
         </div>
