@@ -90,7 +90,7 @@ export function DeviceCarousel() {
   const renderRange = 3
   const renderedDevices = []
 
-  const availableHeight = vh - 120
+  const availableHeight = vh - (isMobile ? 180 : 120) // Increased reserved space for navigation buttons on mobile from 120px to 180px
   const heightBasedScale = availableHeight / (BASE_WIDTH * 2)
   const widthBasedScale = (vw * 0.9) / BASE_WIDTH
 
@@ -124,8 +124,8 @@ export function DeviceCarousel() {
     const DeviceComponent = device.component
     const isActive = offsetPos === 0
 
-    const activeScale = isMobile ? 0.7 : isTablet ? 0.7 : 1
-    const inactiveScale = isMobile ? 0.56 : isTablet ? 0.56 : 0.8
+    const activeScale = isMobile ? 0.95 : isTablet ? 0.85 : 1 // Increased mobile scale from 0.7 to 0.875 (25% increase)
+    const inactiveScale = isMobile ? 0.75 : isTablet ? 0.75 : 0.8 // Increased mobile scale from 0.56 to 0.7 (25% increase)
     const finalScale = fitScale * (isActive ? activeScale : inactiveScale)
 
     const centerOffset = BASE_WIDTH / 2 // 250px - half of the fixed container width
@@ -168,7 +168,7 @@ export function DeviceCarousel() {
         {/* Device Display Area */}
         <div className="relative flex items-center justify-center w-full">{renderedDevices}</div>
 
-        <div className="absolute bottom-8 md:bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 z-20">
+        <div className="absolute bottom-4 md:bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-3 md:gap-4 z-20">
           <button
             onClick={handlePrevious}
             disabled={isTransitioning}

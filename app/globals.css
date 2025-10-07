@@ -143,6 +143,16 @@
   body {
     overflow-x: hidden;
   }
+  /* Prevent vertical scrolling on mobile devices */
+  @media (max-width: 767px) {
+    html,
+    body {
+      overflow-y: hidden;
+      height: 100vh;
+      position: fixed;
+      width: 100%;
+    }
+  }
 }
 
 @keyframes float-slow {
