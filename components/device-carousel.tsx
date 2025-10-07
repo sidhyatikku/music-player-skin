@@ -87,7 +87,7 @@ export function DeviceCarousel() {
     }, 700)
   }
 
-  const renderRange = 3
+  const renderRange = isMobile ? 0 : 3
   const renderedDevices = []
 
   const availableHeight = vh - (isMobile ? 100 : 120) // Reduced mobile reserved space from 180px to 100px since buttons are now closer
