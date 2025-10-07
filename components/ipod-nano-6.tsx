@@ -74,7 +74,6 @@ export function IPodNano6({
   }
 
   const handleItemSelect = (index: number) => {
-    playClick()
     const currentList = getCurrentList()
 
     if (navigation.level === "artists") {
@@ -107,7 +106,6 @@ export function IPodNano6({
   }
 
   const handleBack = () => {
-    playClick()
     if (navigation.level === "nowPlaying") {
       setNavigation({
         ...navigation,
@@ -160,7 +158,6 @@ export function IPodNano6({
   }
 
   const handlePlayPause = () => {
-    playClick()
     setIsPlaying(!isPlaying)
   }
 
