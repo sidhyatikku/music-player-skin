@@ -101,7 +101,7 @@ export function DeviceCarousel() {
 
   const fitScale = Math.min(widthBasedScale, heightBasedScale, 1)
 
-  const spacing = BASE_WIDTH * fitScale * (isMobile ? 0.85 : isTablet ? 0.9 : 0.95)
+  const spacing = BASE_WIDTH * fitScale * (isMobile ? 0.85 : isTablet ? 0.9 : 1.3) // Increased desktop spacing from 0.95 to 1.3 for more space between devices
 
   console.log(
     "[v0] Carousel render - vw:",
