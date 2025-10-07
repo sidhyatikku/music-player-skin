@@ -38,7 +38,7 @@ export function ClickWheel({
   const [lastAngle, setLastAngle] = useState(0)
   const [rotationDelta, setRotationDelta] = useState(0)
   const { playClick } = useClickWheelSound()
-  const lastScrollTimeRef = useRef<number>(0)
+  const lastMoveTimeRef = useRef<number>(0)
 
   const getAngle = (e: MouseEvent | TouchEvent) => {
     if (!wheelRef.current) return 0
@@ -81,37 +81,34 @@ export function ClickWheel({
     const newDelta = rotationDelta + normalizedDiff
     setRotationDelta(newDelta)
 
+    const now = performance.now()
+    const timeDelta = now - lastMoveTimeRef.current
+    const velocity = timeDelta > 0 ? Math.abs(normalizedDiff) / (timeDelta / 1000) : 0
+    lastMoveTimeRef.current = now
+
     // Scroll/volume threshold
     const threshold = 0.3
-
-    const now = Date.now()
-    const timeSinceLastScroll = now - lastScrollTimeRef.current
-    const velocity = timeSinceLastScroll > 0 ? Math.min(1, 200 / timeSinceLastScroll) : 0
 
     if (showPlaylist) {
       // Scroll when rotation exceeds threshold
       if (newDelta > threshold) {
         onScrollDown()
-        playClick(velocity)
-        lastScrollTimeRef.current = now
+        playClick(Math.min(1, velocity / 5))
         setRotationDelta(0)
       } else if (newDelta < -threshold) {
         onScrollUp()
-        playClick(velocity)
-        lastScrollTimeRef.current = now
+        playClick(Math.min(1, velocity / 5))
         setRotationDelta(0)
       }
     } else {
       // Volume control in increments of 10
       if (newDelta > threshold) {
         onVolumeChange(Math.min(100, volume + 10))
-        playClick(velocity)
-        lastScrollTimeRef.current = now
+        playClick(Math.min(1, velocity / 5))
         setRotationDelta(0)
       } else if (newDelta < -threshold) {
         onVolumeChange(Math.max(0, volume - 10))
-        playClick(velocity)
-        lastScrollTimeRef.current = now
+        playClick(Math.min(1, velocity / 5))
         setRotationDelta(0)
       }
     }
