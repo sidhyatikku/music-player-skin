@@ -181,7 +181,7 @@ export function DeviceCarousel() {
           <button
             onClick={handleNext}
             disabled={isTransitioning}
-            className="w-12 h-12 md:w-16 md:h-16 hidden md:flex items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all duration-300 border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all duration-300 border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Next device"
           >
             <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-white" />
