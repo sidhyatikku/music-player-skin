@@ -42,7 +42,12 @@ export function DeviceCarousel() {
   const [isTablet, setIsTablet] = useState(false)
   const [vw, setVw] = useState<number>(typeof window === "undefined" ? 1024 : window.innerWidth)
   const [vh, setVh] = useState<number>(typeof window === "undefined" ? 768 : window.innerHeight)
+  const [hasMounted, setHasMounted] = useState(false)
   const { playClick } = useClickWheelSound()
+
+  useEffect(() => {
+    setHasMounted(true)
+  }, [])
 
   useEffect(() => {
     const checkMobile = () => {
@@ -149,7 +154,7 @@ export function DeviceCarousel() {
     renderedDevices.push(
       <div
         key={`${device.id}-${virtualIndex}`}
-        className={`absolute left-1/2 top-1/2 transition-all duration-700 ease-in-out ${
+        className={`absolute left-1/2 top-1/2 ${hasMounted ? "transition-all duration-700 ease-in-out" : ""} ${
           isActive ? "opacity-100" : "opacity-0 md:opacity-50"
         }`}
         style={{
@@ -162,7 +167,7 @@ export function DeviceCarousel() {
         }}
       >
         <div
-          className="flex items-center justify-center w-full h-full transition-transform duration-700"
+          className={`flex items-center justify-center w-full h-full ${hasMounted ? "transition-transform duration-700" : ""}`}
           style={{
             transform: `scale(${finalScale})`,
             transformOrigin: "center center",
