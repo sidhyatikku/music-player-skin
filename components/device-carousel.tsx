@@ -22,6 +22,7 @@ interface Device {
   component: React.ComponentType<{ isActive: boolean; deviceName: string }>
 }
 
+
 const devices: Device[] = [
   { id: "nokia-3310", name: "Nokia 3310", component: Nokia3310 },
   { id: "ipod-nano-6", name: "iPod Nano", component: IPodNano6 },
