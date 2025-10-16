@@ -62,6 +62,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
       selectedSong: currentNavigation.selectedSong?.title,
       selectedAlbum: currentNavigation.selectedAlbum?.name,
       selectedArtist: currentNavigation.selectedArtist?.name,
+      level: currentNavigation.level,
     })
 
     if (!currentNavigation.selectedSong || !currentNavigation.selectedAlbum || !currentNavigation.selectedArtist) {
@@ -79,6 +80,8 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
     const songIndex = currentAlbum.songs.findIndex((s) => s.id === currentSong.id)
 
     console.log("[v0] Current indices:", { artistIndex, albumIndex, songIndex })
+    console.log("[v0] Album has", currentAlbum.songs.length, "songs")
+    console.log("[v0] Artist has", currentArtist.albums.length, "albums")
 
     isPlayingRef.current = true
 
@@ -95,7 +98,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    // Try to play first song of next album
+    console.log("[v0] Album ended, checking for next album")
     if (albumIndex < currentArtist.albums.length - 1) {
       const nextAlbum = currentArtist.albums[albumIndex + 1]
       const nextSong = nextAlbum.songs[0]
@@ -110,7 +113,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    // Try to play first song of first album of next artist
+    console.log("[v0] Artist ended, checking for next artist")
     if (artistIndex < musicLibrary.length - 1) {
       const nextArtist = musicLibrary[artistIndex + 1]
       const nextAlbum = nextArtist.albums[0]
