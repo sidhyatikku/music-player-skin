@@ -80,6 +80,8 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
 
     console.log("[v0] Current indices:", { artistIndex, albumIndex, songIndex })
 
+    isPlayingRef.current = true
+
     // Try to play next song in current album
     if (songIndex < currentAlbum.songs.length - 1) {
       const nextSong = currentAlbum.songs[songIndex + 1]
