@@ -1,197 +1,218 @@
-import { readFileSync, readdirSync } from "fs"
+// scripts/merge-json-libs.js
+import { readFileSync, writeFileSync, readdirSync, existsSync } from "fs"
+import { fileURLToPath } from "url"
+import { dirname, resolve, join } from "path"
 
-// Extract YouTube video ID from URL
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+// Allow overrides; otherwise use repo layout
+const libraryPath = resolve(process.env.LIB_PATH ?? resolve(__dirname, "../lib/music-library.ts"))
+const jsonDir = resolve(process.env.JSON_DIR ?? resolve(__dirname, "../lib/metadata-json-enriched"))
+
 function extractYouTubeId(url) {
   if (!url) return null
-  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)
-  return match ? match[1] : null
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtube\.com\/.*[?&]v=)([^&\s#]+)/i,
+    /youtu\.be\/([^?&#\s]+)/i,
+    /m\.youtube\.com\/watch\?v=([^&\s#]+)/i,
+    /youtube\.com\/shorts\/([^?&#\s]+)/i,
+  ]
+  for (const rx of patterns) {
+    const m = url.match(rx)
+    if (m && m[1]) return m[1]
+  }
+  return null
 }
 
-// Normalize artist name for comparison
 function normalizeArtistName(name) {
-  return name.toLowerCase().trim().replace(/\s+/g, " ")
+  return (name || "").toLowerCase().trim().replace(/\s+/g, " ")
+}
+
+function die(...msg) {
+  console.error(...msg)
+  process.exit(1)
 }
 
 console.log("[v0] Starting JSON to music library merge...")
+console.log("[v0] Using library path:", libraryPath)
+console.log("[v0] Using JSON dir:", jsonDir)
 
-try {
-  const libraryPath = "../lib/music-library.ts"
-  const jsonDir = "../lib/metadata-json-enriched"
+if (!existsSync(libraryPath)) die("[v0] Error: music-library.ts not found at", libraryPath)
+if (!existsSync(jsonDir)) die("[v0] Error: metadata JSON directory not found at", jsonDir)
 
-  console.log("[v0] Reading music library from:", libraryPath)
-  const libraryContent = readFileSync(libraryPath, "utf-8")
+// ------- read & index existing library ------
+let libraryContent = readFileSync(libraryPath, "utf-8")
 
-  // Extract existing song IDs to avoid duplicates
-  const existingSongIds = new Set()
-  const songIdMatches = libraryContent.matchAll(/id:\s*["']([^"']+)["']/g)
-  for (const match of songIdMatches) {
-    existingSongIds.add(match[1])
+const existingSongIds = new Set()
+for (const m of libraryContent.matchAll(/id:\s*["'`]([^"'`]+)["'`]/g)) {
+  existingSongIds.add(m[1])
+}
+
+const existingArtists = new Map()
+for (const m of libraryContent.matchAll(
+  /{\s*name:\s*["'`]([^"'`]+)["'`],\s*(?:photoUrl:[^,]*,\s*)?albums\s*:\s*\[/g
+)) {
+  existingArtists.set(normalizeArtistName(m[1]), m[1])
+}
+
+console.log("[v0] Found", existingSongIds.size, "existing songs in library")
+console.log("[v0] Found", existingArtists.size, "existing artists in library")
+
+// ------- scan JSON inputs ------
+const jsonFiles = readdirSync(jsonDir).filter((f) => f.endsWith(".json"))
+console.log("[v0] Found", jsonFiles.length, "JSON files to process")
+
+let newSongsAdded = 0
+let newAlbumsAdded = 0
+const artistsToAppend = [] // brand-new artists to add
+
+// Build TS object text for an album
+function albumToTs(album) {
+  const lines = []
+  lines.push(`      {`)
+  lines.push(`        name: "${(album.name || "").replace(/"/g, '\\"')}",`)
+  if (album.year) lines.push(`        year: "${album.year}",`)
+  if (album.coverUrl) lines.push(`        coverUrl: "${(album.coverUrl || "").replace(/"/g, '\\"')}",`)
+  lines.push(`        songs: [`)
+  for (const s of album.songs) {
+    lines.push(`          { id: "${s.id}", title: "${(s.title || "").replace(/"/g, '\\"')}" },`)
   }
-  console.log("[v0] Found", existingSongIds.size, "existing songs in library")
+  lines.push(`        ],`)
+  lines.push(`      }`)
+  return lines.join("\n")
+}
 
-  console.log("[v0] Reading JSON files from:", jsonDir)
-  const jsonFiles = readdirSync(jsonDir).filter((f) => f.endsWith(".json"))
-  console.log("[v0] Found", jsonFiles.length, "JSON files to process")
+// Build TS object text for a whole artist
+function artistToTs(artist) {
+  const albums = artist.albums.map(albumToTs).join(",\n")
+  return `  {
+    name: "${artist.name.replace(/"/g, '\\"')}",
+    albums: [
+${albums}
+    ],
+  }`
+}
 
-  // Parse existing library to find artists
-  const artistMatches = libraryContent.matchAll(/{\s*name:\s*["']([^"']+)["'],\s*(?:photoUrl:[^,]*,\s*)?albums:/g)
-  const existingArtists = new Map()
-  for (const match of artistMatches) {
-    existingArtists.set(normalizeArtistName(match[1]), match[1])
+// Find albums array bounds for a given artist name (works with normal formatting)
+function findAlbumsArrayBoundsForArtist(src, artistName) {
+  const esc = artistName.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")
+  const re = new RegExp(String.raw`{\s*name:\s*["'\`]${esc}["'\`][\s\S]*?albums\s*:\s*\[`, "m")
+  const m = re.exec(src)
+  if (!m) return null
+  const startIdx = m.index + m[0].lastIndexOf("[")
+  let i = startIdx, depth = 0, endIdx = -1
+  while (i < src.length) {
+    const ch = src[i]
+    if (ch === "[") depth++
+    else if (ch === "]") {
+      depth--
+      if (depth === 0) { endIdx = i; break }
+    }
+    i++
   }
-  console.log("[v0] Found", existingArtists.size, "existing artists in library")
+  if (endIdx === -1) return null
+  return { openIdx: startIdx, closeIdx: endIdx }
+}
 
-  // Process each JSON file
-  let newSongsAdded = 0
-  let newAlbumsAdded = 0
-  const artistsToAppend = []
+// Replace albums array content with existing + appended
+function insertAlbumsIntoArtist(src, artistName, albumsToAdd) {
+  const bounds = findAlbumsArrayBoundsForArtist(src, artistName)
+  if (!bounds) return null
+  const beforeOpen = src.slice(0, bounds.openIdx + 1)
+  const inside = src.slice(bounds.openIdx + 1, bounds.closeIdx)
+  const afterClose = src.slice(bounds.closeIdx)
 
-  for (const jsonFile of jsonFiles) {
-    console.log("[v0] Processing:", jsonFile)
-    const jsonPath = `${jsonDir}/${jsonFile}`
-    const jsonData = JSON.parse(readFileSync(jsonPath, "utf-8"))
+  const existingTrim = inside.trim()
+  const appended = albumsToAdd.map(albumToTs).join(",\n")
 
-    const artistName = jsonData.artist
-    const normalizedArtistName = normalizeArtistName(artistName)
+  let newInside
+  if (existingTrim === "") {
+    newInside = `\n${appended}\n`
+  } else {
+    // ensure existing ends with a comma
+    const existingWithComma = /,\s*$/.test(existingTrim) ? existingTrim : existingTrim + ","
+    newInside = `\n${existingWithComma}\n${appended}\n`
+  }
 
-    // Check if artist exists in library
-    if (existingArtists.has(normalizedArtistName)) {
-      console.log("[v0]   Artist exists:", artistName, "- will add new songs only")
+  return beforeOpen + newInside + afterClose
+}
 
-      // Process albums and songs
-      const newAlbums = []
-      for (const album of jsonData.albums) {
-        const songsWithYoutube = album.songs
-          .filter((song) => song.youtube)
-          .map((song) => {
-            const videoId = extractYouTubeId(song.youtube)
-            return videoId && !existingSongIds.has(videoId) ? { id: videoId, title: song.title } : null
-          })
-          .filter((song) => song !== null)
+for (const jsonFile of jsonFiles) {
+  console.log("[v0] Processing:", jsonFile)
+  const jsonPath = join(jsonDir, jsonFile)
+  const data = JSON.parse(readFileSync(jsonPath, "utf-8"))
 
-        if (songsWithYoutube.length > 0) {
-          newAlbumsAdded++
-          newSongsAdded += songsWithYoutube.length
-          newAlbums.push({
-            name: album.album,
-            year: album.year || undefined,
-            coverUrl: album.albumArt,
-            songs: songsWithYoutube,
-          })
-          console.log("[v0]     Album:", album.album, "-", songsWithYoutube.length, "new songs")
-        }
-      }
+  const artistName = data.artist || data.name || "Unknown Artist"
+  const normArtist = normalizeArtistName(artistName)
+  const albumsIn = Array.isArray(data.albums) ? data.albums : []
 
-      if (newAlbums.length > 0) {
-        // Generate TypeScript code for new albums
-        const albumsCode = newAlbums
-          .map((album) => {
-            const songsCode = album.songs
-              .map((song) => `          { id: "${song.id}", title: "${song.title.replace(/"/g, '\\"')}" }`)
-              .join(",\n")
+  // Build new album payloads (only songs with YouTube IDs not already in library)
+  const albumsBuilt = []
+  for (const album of albumsIn) {
+    const albumName = album.album || album.name || "Unknown Album"
+    const year = album.year || undefined
+    const coverUrl = album.coverUrl || album.albumArt || undefined
+    const songsSrc = Array.isArray(album.songs) ? album.songs : []
 
-            return `      {
-        name: "${album.name.replace(/"/g, '\\"')}",${album.year ? `\n        year: "${album.year}",` : ""}
-        coverUrl: "${album.coverUrl}",
-        songs: [
-${songsCode}
-        ],
-      }`
-          })
-          .join(",\n")
+    const songs = songsSrc
+      .map((s) => {
+        const vid = extractYouTubeId(s.youtube)
+        if (!vid) return null
+        if (existingSongIds.has(vid)) return null
+        return { id: vid, title: s.title || "" }
+      })
+      .filter(Boolean)
 
-        console.log("[v0]   Generated code for", newAlbums.length, "new albums")
-        console.log("[v0]   MANUAL STEP REQUIRED: Add these albums to", artistName, "in music-library.ts:")
-        console.log("---START---")
-        console.log(albumsCode)
-        console.log("---END---")
-      }
-    } else {
-      console.log("[v0]   New artist:", artistName, "- will add complete discography")
-
-      // Process all albums for new artist
-      const albums = []
-      for (const album of jsonData.albums) {
-        const songsWithYoutube = album.songs
-          .filter((song) => song.youtube)
-          .map((song) => {
-            const videoId = extractYouTubeId(song.youtube)
-            return videoId ? { id: videoId, title: song.title } : null
-          })
-          .filter((song) => song !== null)
-
-        if (songsWithYoutube.length > 0) {
-          newSongsAdded += songsWithYoutube.length
-          albums.push({
-            name: album.album,
-            year: album.year || undefined,
-            coverUrl: album.coverUrl,
-            songs: songsWithYoutube,
-          })
-        }
-      }
-
-      if (albums.length > 0) {
-        newAlbumsAdded += albums.length
-        artistsToAppend.push({
-          name: artistName,
-          albums: albums,
-        })
-        console.log(
-          "[v0]     Added",
-          albums.length,
-          "albums with",
-          albums.reduce((sum, a) => sum + a.songs.length, 0),
-          "songs",
-        )
-      }
+    if (songs.length > 0) {
+      newSongsAdded += songs.length
+      newAlbumsAdded += 1
+      albumsBuilt.push({ name: albumName, year, coverUrl, songs })
+      for (const s of songs) existingSongIds.add(s.id)
     }
   }
 
-  // Generate code for new artists to append
-  if (artistsToAppend.length > 0) {
-    console.log("[v0] Generating code for", artistsToAppend.length, "new artists...")
-
-    const newArtistsCode = artistsToAppend
-      .map((artist) => {
-        const albumsCode = artist.albums
-          .map((album) => {
-            const songsCode = album.songs
-              .map((song) => `          { id: "${song.id}", title: "${song.title.replace(/"/g, '\\"')}" }`)
-              .join(",\n")
-
-            return `      {
-        name: "${album.name.replace(/"/g, '\\"')}",${album.year ? `\n        year: "${album.year}",` : ""}
-        coverUrl: "${album.coverUrl}",
-        songs: [
-${songsCode}
-        ],
-      }`
-          })
-          .join(",\n")
-
-        return `  {
-    name: "${artist.name}",
-    albums: [
-${albumsCode}
-    ],
-  }`
-      })
-      .join(",\n")
-
-    console.log("[v0] MANUAL STEP REQUIRED: Add these new artists to the end of musicLibrary array:")
-    console.log("---START---")
-    console.log(newArtistsCode)
-    console.log("---END---")
+  if (albumsBuilt.length === 0) {
+    console.log("[v0]   No new songs for this artist. Skipping.")
+    continue
   }
 
-  console.log("[v0] Summary:")
-  console.log("[v0]   New albums:", newAlbumsAdded)
-  console.log("[v0]   New songs:", newSongsAdded)
-  console.log("[v0]   New artists:", artistsToAppend.length)
-  console.log("[v0] NOTE: This script generates code that needs to be manually added to music-library.ts")
-  console.log("[v0] The script does not automatically modify the file to prevent accidental data loss.")
-} catch (error) {
-  console.error("[v0] Error:", error.message)
-  process.exit(1)
+  if (existingArtists.has(normArtist)) {
+    const updated = insertAlbumsIntoArtist(libraryContent, existingArtists.get(normArtist), albumsBuilt)
+    if (!updated) {
+      console.warn(`[v0]   Could not locate albums[] for "${artistName}" automatically. Skipping auto-insert for this artist.`)
+      continue
+    }
+    libraryContent = updated
+    console.log(`[v0]   Injected ${albumsBuilt.length} new album(s) into ${artistName}.`)
+  } else {
+    artistsToAppend.push({ name: artistName, albums: albumsBuilt })
+    console.log(`[v0]   Staged new artist "${artistName}" with ${albumsBuilt.length} album(s) for append.`)
+  }
 }
+
+// Append brand-new artists at the end of musicLibrary array
+if (artistsToAppend.length > 0) {
+  const artistsCode = artistsToAppend.map(artistToTs).join(",\n")
+  // try to find end of musicLibrary array: look for the last closing bracket ']' before '];' or before an export
+  const endMatch = libraryContent.match(/(\n]\s*;\s*$|\n]\s*\n\s*export\s+)/m)
+  if (endMatch) {
+    const insertAt = endMatch.index
+    const before = libraryContent.slice(0, insertAt)
+    const after = libraryContent.slice(insertAt)
+    const needsComma = !before.trimEnd().endsWith(",")
+    libraryContent = before + (needsComma ? "," : "") + "\n" + artistsCode + after
+    console.log("[v0] Appended", artistsToAppend.length, "new artist(s) to musicLibrary.")
+  } else {
+    console.warn("[v0] Could not auto-locate end of musicLibrary array. New artists not appended.")
+  }
+}
+
+// ------- write once -------
+writeFileSync(libraryPath, libraryContent, "utf-8")
+
+console.log("[v0] Summary:")
+console.log("[v0]   New albums:", newAlbumsAdded)
+console.log("[v0]   New songs:", newSongsAdded)
+console.log("[v0]   New artists appended:", artistsToAppend.length)
+console.log("[v0] Merge complete! ✔")
