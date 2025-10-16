@@ -2,7 +2,7 @@
 
 import { useMusicPlayback } from "@/contexts/music-playback-context"
 import { musicLibrary, type Artist, type Album, type Song } from "@/lib/music-library"
-import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Play, Pause } from "lucide-react"
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Play, Pause, Music, User, Disc, Hash } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useClickWheelSound } from "@/hooks/use-click-wheel-sound"
 import {
@@ -364,56 +364,68 @@ export function SonyWalkmanNWA1000({
                     />
                   </div>
                   <span className="text-[11px]">
-                    {navigation.level === "nowPlaying" && isPlaying ? "Playing" : getScreenTitle()}
+                    {navigation.level === "nowPlaying" ? "Now Playing" : getScreenTitle()}
                   </span>
                 </div>
               </div>
 
               {navigation.level === "nowPlaying" && navigation.selectedSong ? (
-                <div className="flex-1 flex flex-col items-center justify-center">
-                  <div className="mb-3 flex items-end gap-[3px] h-[28px]">
-                    {[...Array(5)].map((_, i) => (
+                <div className="flex-1 flex flex-col justify-center space-y-2">
+                  <div className="flex items-end justify-center gap-[3px] h-[32px] mb-2">
+                    {[...Array(7)].map((_, i) => (
                       <div
                         key={i}
                         className={`w-[4px] bg-white rounded-t-sm ${isPlaying ? "animate-pulse" : ""}`}
                         style={{
-                          height: isPlaying ? `${20 + Math.random() * 40}%` : "10%",
+                          height: isPlaying ? `${30 + Math.random() * 70}%` : "20%",
                           animationDelay: isPlaying ? `${i * 0.1}s` : "0s",
-                          animationDuration: isPlaying ? `${0.6 + Math.random() * 0.4}s` : "0s",
+                          animationDuration: isPlaying ? `${0.5 + Math.random() * 0.5}s` : "0s",
                         }}
                       ></div>
                     ))}
                   </div>
 
-                  <div className="flex items-center justify-between w-full px-1">
-                    <div className="flex-1">
-                      <div className="text-[14px] font-bold mb-1 line-clamp-2 leading-tight">
+                  <div className="space-y-1.5">
+                    <div className="flex items-start gap-1.5">
+                      <Music size={14} className="mt-0.5 flex-shrink-0" />
+                      <div className="text-[13px] font-bold leading-tight line-clamp-2">
                         {getSongTitle(navigation.selectedSong)}
                       </div>
-                      <div className="text-[12px] opacity-80">
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <User size={14} className="flex-shrink-0" />
+                      <div className="text-[12px] opacity-90 truncate">
                         {getSongArtist(navigation.selectedSong, navigation.selectedArtist)}
                       </div>
-                      <div className="text-[11px] opacity-70 mt-0.5">
-                        {getSongYear(navigation.selectedSong, navigation.selectedAlbum)}
-                      </div>
                     </div>
-                    <div className="ml-2">
-                      {isPlaying ? (
-                        <Pause size={24} fill="white" strokeWidth={0} />
-                      ) : (
-                        <Play size={24} fill="white" strokeWidth={0} />
-                      )}
+
+                    <div className="flex items-center gap-1.5">
+                      <Disc size={14} className="flex-shrink-0" />
+                      <div className="text-[11px] opacity-80 truncate">{getAlbumTitle(navigation.selectedAlbum)}</div>
+                    </div>
+
+                    {getSongYear(navigation.selectedSong, navigation.selectedAlbum) && (
+                      <div className="flex items-center gap-1.5">
+                        <Hash size={14} className="flex-shrink-0" />
+                        <div className="text-[11px] opacity-80">
+                          {getSongYear(navigation.selectedSong, navigation.selectedAlbum)}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="text-[11px] opacity-70 mt-1">
+                      {(() => {
+                        const songs = navigation.selectedAlbum?.songs || []
+                        const currentIndex = songs.findIndex((s) => s === navigation.selectedSong)
+                        return `${currentIndex + 1}/${songs.length}`
+                      })()}
                     </div>
                   </div>
 
-                  <div className="w-full mt-4 px-1">
-                    <div className="flex justify-between text-[10px] opacity-70 mb-1">
-                      <span>{formatTime(currentTime)}</span>
-                      <span>{formatTime(duration)}</span>
-                    </div>
-
+                  <div className="w-full mt-3 px-1">
                     <div
-                      className="w-full h-1.5 rounded-full overflow-hidden"
+                      className="w-full h-1.5 rounded-full overflow-hidden mb-2"
                       style={{
                         background: "rgba(255, 255, 255, 0.2)",
                         boxShadow: "inset 0 1px 2px rgba(0, 0, 0, 0.3)",
@@ -427,6 +439,18 @@ export function SonyWalkmanNWA1000({
                           boxShadow: "0 0 4px rgba(255, 255, 255, 0.5)",
                         }}
                       />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        {isPlaying ? (
+                          <Pause size={16} fill="white" strokeWidth={0} />
+                        ) : (
+                          <Play size={16} fill="white" strokeWidth={0} />
+                        )}
+                        <span className="text-[10px] opacity-70">{formatTime(currentTime)}</span>
+                      </div>
+                      <span className="text-[10px] opacity-70">{formatTime(duration)}</span>
                     </div>
                   </div>
                 </div>
