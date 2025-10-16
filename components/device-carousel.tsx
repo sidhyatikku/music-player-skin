@@ -22,7 +22,6 @@ interface Device {
   component: React.ComponentType<{ isActive: boolean; deviceName: string }>
 }
 
-
 const devices: Device[] = [
   { id: "nokia-3310", name: "Nokia 3310", component: Nokia3310 },
   { id: "ipod-nano-6", name: "iPod Nano", component: IPodNano6 },
@@ -41,13 +40,13 @@ export function DeviceCarousel() {
   const [scrollPosition, setScrollPosition] = useState(2)
   const [isMobile, setIsMobile] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
-  const [vw, setVw] = useState<number>(typeof window === "undefined" ? 1024 : window.innerWidth)
-  const [vh, setVh] = useState<number>(typeof window === "undefined" ? 768 : window.innerHeight)
-  const [hasMounted, setHasMounted] = useState(false)
+  const [vw, setVw] = useState<number | null>(null)
+  const [vh, setVh] = useState<number | null>(null)
   const { playClick } = useClickWheelSound()
 
   useEffect(() => {
-    setHasMounted(true)
+    setVw(window.innerWidth)
+    setVh(window.innerHeight)
   }, [])
 
   useEffect(() => {
@@ -66,7 +65,6 @@ export function DeviceCarousel() {
       setVw(window.innerWidth)
       setVh(window.innerHeight)
     }
-    onResize()
     window.addEventListener("resize", onResize)
     return () => window.removeEventListener("resize", onResize)
   }, [])
@@ -103,6 +101,16 @@ export function DeviceCarousel() {
       setIsTransitioning(false)
       setPreviousDeviceIndex(null)
     }, 700)
+  }
+
+  if (vw === null || vh === null) {
+    return (
+      <MusicPlaybackProvider>
+        <div className="relative w-full h-screen flex items-center justify-center overflow-hidden px-4 md:px-0">
+          {/* Empty placeholder while loading */}
+        </div>
+      </MusicPlaybackProvider>
+    )
   }
 
   const renderRange = isMobile ? 0 : 3
@@ -155,7 +163,7 @@ export function DeviceCarousel() {
     renderedDevices.push(
       <div
         key={`${device.id}-${virtualIndex}`}
-        className={`absolute left-1/2 top-1/2 ${hasMounted ? "transition-all duration-700 ease-in-out" : ""} ${
+        className={`absolute left-1/2 top-1/2 transition-all duration-700 ease-in-out ${
           isActive ? "opacity-100" : "opacity-0 md:opacity-50"
         }`}
         style={{
@@ -168,7 +176,7 @@ export function DeviceCarousel() {
         }}
       >
         <div
-          className={`flex items-center justify-center w-full h-full ${hasMounted ? "transition-transform duration-700" : ""}`}
+          className="flex items-center justify-center w-full h-full transition-transform duration-700"
           style={{
             transform: `scale(${finalScale})`,
             transformOrigin: "center center",
