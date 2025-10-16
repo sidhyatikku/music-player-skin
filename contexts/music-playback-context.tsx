@@ -5,6 +5,7 @@ import type React from "react"
 import { createContext, useContext, useState, useRef, useEffect, type ReactNode } from "react"
 import type { Artist, Album, Song } from "@/lib/music-library"
 import { musicLibrary } from "@/lib/music-library"
+import { trackAutoplay } from "@/lib/analytics"
 
 type NavigationLevel = "artists" | "albums" | "songs" | "nowPlaying"
 
@@ -83,6 +84,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
     if (songIndex < currentAlbum.songs.length - 1) {
       const nextSong = currentAlbum.songs[songIndex + 1]
       console.log("[v0] Playing next song in album:", nextSong.title)
+      trackAutoplay(currentArtist.name, currentAlbum.name, nextSong.title, "Auto")
       setNavigation({
         ...currentNavigation,
         selectedSong: nextSong,
@@ -96,6 +98,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
       const nextAlbum = currentArtist.albums[albumIndex + 1]
       const nextSong = nextAlbum.songs[0]
       console.log("[v0] Playing first song of next album:", nextAlbum.name, "-", nextSong.title)
+      trackAutoplay(currentArtist.name, nextAlbum.name, nextSong.title, "Auto")
       setNavigation({
         ...currentNavigation,
         selectedAlbum: nextAlbum,
@@ -111,6 +114,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
       const nextAlbum = nextArtist.albums[0]
       const nextSong = nextAlbum.songs[0]
       console.log("[v0] Playing first song of next artist:", nextArtist.name)
+      trackAutoplay(nextArtist.name, nextAlbum.name, nextSong.title, "Auto")
       setNavigation({
         level: "nowPlaying",
         selectedArtist: nextArtist,
@@ -126,6 +130,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
     const firstAlbum = firstArtist.albums[0]
     const firstSong = firstAlbum.songs[0]
     console.log("[v0] Looping back to first artist:", firstArtist.name)
+    trackAutoplay(firstArtist.name, firstAlbum.name, firstSong.title, "Auto")
     setNavigation({
       level: "nowPlaying",
       selectedArtist: firstArtist,

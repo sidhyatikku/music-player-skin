@@ -106,3 +106,12 @@ export const trackSeek = (position: number, device: string) => {
     device,
   })
 }
+
+export const trackAutoplay = (artist: string, album: string, song: string, device: string) => {
+  trackEvent("song_autoplay", {
+    artist,
+    album,
+    song,
+    device,
+  })
+}

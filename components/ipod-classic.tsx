@@ -12,6 +12,7 @@ import {
   trackMenuBack,
   trackVolumeChange,
   trackButtonPress,
+  trackSongPause,
 } from "@/lib/analytics"
 
 export function IPodClassic({
@@ -257,6 +258,23 @@ export function IPodClassic({
     showUI()
 
     if (navigation.level === "nowPlaying") {
+      if (navigation.selectedSong) {
+        if (isPlaying) {
+          trackSongPause(
+            navigation.selectedArtist?.name || "Unknown",
+            navigation.selectedAlbum?.name || "Unknown",
+            navigation.selectedSong.title,
+            deviceName,
+          )
+        } else {
+          trackSongPlay(
+            navigation.selectedArtist?.name || "Unknown",
+            navigation.selectedAlbum?.name || "Unknown",
+            navigation.selectedSong.title,
+            deviceName,
+          )
+        }
+      }
       setIsPlaying((prev) => !prev)
     }
   }
