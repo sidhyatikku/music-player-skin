@@ -1247,7 +1247,7 @@ export const musicLibrary: Artist[] = [
           { id: "ShYuNe5z0NU", title: "Sandman" },
           { id: "Gt6qt6ZzmMY", title: "Three Roses" },
           { id: "8o8FVoib92w", title: "Children" },
-          { id: "Xxh9Da_EJB4", title: "A Horse With No Name" },
+          { id: "na47wMFfQCo", title: "A Horse With No Name" },
           { id: "7rYMxegglhU", title: "Here" },
           { id: "KOZD1BnMnl0", title: "I Need You" },
           { id: "F6dA88mepxw", title: "Rainy Day" },
