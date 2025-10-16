@@ -72,7 +72,7 @@ export function DeviceCarousel() {
   const handlePrevious = () => {
     if (isTransitioning) return
 
-    console.log("[v0] Previous button pressed, current index:", currentDeviceIndex)
+    console.log("[v0] Device changed to:", devices[(currentDeviceIndex - 1 + devices.length) % devices.length].name)
     setPreviousDeviceIndex(currentDeviceIndex)
     setIsTransitioning(true)
     setScrollPosition((prev) => prev - 1)
@@ -89,7 +89,7 @@ export function DeviceCarousel() {
   const handleNext = () => {
     if (isTransitioning) return
 
-    console.log("[v0] Next button pressed, current index:", currentDeviceIndex)
+    console.log("[v0] Device changed to:", devices[(currentDeviceIndex + 1) % devices.length].name)
     setPreviousDeviceIndex(currentDeviceIndex)
     setIsTransitioning(true)
     setScrollPosition((prev) => prev + 1)
@@ -124,25 +124,6 @@ export function DeviceCarousel() {
 
   const spacing = BASE_WIDTH * fitScale * (isMobile ? 0.85 : isTablet ? 0.9 : 1.3) // Increased desktop spacing from 0.95 to 1.3 for more space between devices
 
-  console.log(
-    "[v0] Carousel render - vw:",
-    vw,
-    "vh:",
-    vh,
-    "widthScale:",
-    widthBasedScale,
-    "heightScale:",
-    heightBasedScale,
-    "fitScale:",
-    fitScale,
-    "spacing:",
-    spacing,
-    "isMobile:",
-    isMobile,
-    "isTablet:",
-    isTablet,
-  )
-
   for (let offsetPos = -renderRange; offsetPos <= renderRange; offsetPos++) {
     const virtualIndex = scrollPosition + offsetPos
     const deviceIndex = ((virtualIndex % devices.length) + devices.length) % devices.length
@@ -150,15 +131,11 @@ export function DeviceCarousel() {
     const DeviceComponent = device.component
     const isActive = offsetPos === 0
 
-    const activeScale = isMobile ? 1.3 : isTablet ? 0.85 : 1.3 // Reduced desktop active scale from 1.4 (40% increase) to 1.3 (30% increase)
+    const activeScale = isMobile ? 1.3 : isTablet ? 0.85 : 1.3
     const inactiveScale = isMobile ? 0.75 : isTablet ? 0.75 : 0.8
     const finalScale = fitScale * (isActive ? activeScale : inactiveScale)
 
-    const centerOffset = BASE_WIDTH / 2 // 250px - half of the fixed container width
-
-    console.log(
-      `[v0] Device ${device.name} (${isActive ? "ACTIVE" : "inactive"}) - width: ${BASE_WIDTH}px, finalScale: ${finalScale}, rendered width: ${BASE_WIDTH * finalScale}px, height: auto (aspect-ratio based)`,
-    )
+    const centerOffset = BASE_WIDTH / 2
 
     renderedDevices.push(
       <div
