@@ -164,12 +164,16 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
             console.log("[v0] YouTube player state changed:", event.data)
             if (event.data === (window as any).YT.PlayerState.PLAYING) {
               isLoadingRef.current = false
-              isPlayingRef.current = true
-              setIsPlaying(true)
+              if (!isLoadingRef.current) {
+                isPlayingRef.current = true
+                setIsPlaying(true)
+              }
             } else if (event.data === (window as any).YT.PlayerState.PAUSED) {
+              if (!isLoadingRef.current) {
+                isPlayingRef.current = false
+                setIsPlaying(false)
+              }
               isLoadingRef.current = false
-              isPlayingRef.current = false
-              setIsPlaying(false)
             } else if (event.data === (window as any).YT.PlayerState.ENDED) {
               console.log("[v0] Song ended, calling playNextSong")
               isLoadingRef.current = false
@@ -196,7 +200,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
         isLoadingRef.current = true
 
         try {
-          if (isPlaying) {
+          if (isPlayingRef.current) {
             // Load and play immediately
             playerRef.current.loadVideoById({
               videoId: navigation.selectedSong.id,
@@ -215,7 +219,7 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
         }
       }
     }
-  }, [navigation.selectedSong, playerReady, isPlaying])
+  }, [navigation.selectedSong, playerReady])
 
   useEffect(() => {
     if (playerReady && playerRef.current && navigation.selectedSong) {

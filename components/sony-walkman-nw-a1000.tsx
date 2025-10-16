@@ -108,6 +108,7 @@ export function SonyWalkmanNWA1000({
           ...navigation,
           selectedSong: prevSong,
         })
+        setIsPlaying(true)
       }
     } else {
       console.log("[v0] Moving selection up from", selectedIndex, "to", Math.max(0, selectedIndex - 1))
@@ -134,6 +135,7 @@ export function SonyWalkmanNWA1000({
           ...navigation,
           selectedSong: nextSong,
         })
+        setIsPlaying(true)
       }
     } else {
       const currentList = getCurrentList()

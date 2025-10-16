@@ -50,11 +50,13 @@ export function IPodNano6({
 
   const handleVolumeUp = () => {
     setVolume((prevVolume) => Math.min(prevVolume + 10, 100))
+    setShowVolumeUI(true)
     playClick()
   }
 
   const handleVolumeDown = () => {
     setVolume((prevVolume) => Math.max(prevVolume - 10, 0))
+    setShowVolumeUI(true)
     playClick()
   }
 
